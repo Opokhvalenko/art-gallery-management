@@ -1,0 +1,27 @@
+# compiled output
+/dist
+/node_modules
+/build
+
+# logs
+logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+
+# tests
+/coverage
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+
+# env (committed: .env.example only)
+.env
+.env.local
+.env.*.local
+
+# NOTE: prisma/dev.db and prisma/migrations are intentionally NOT ignored —
+# committed so a reviewer can run the app with zero setup (see README decisions).
