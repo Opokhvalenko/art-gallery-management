@@ -26,9 +26,10 @@ fi
 
 if echo "$CHANGED" | grep -q '^frontend/'; then
   echo "🔍 Frontend changed → typecheck + lint + build..."
-  (cd frontend && npx tsc --noEmit) || { echo "❌ Frontend TypeScript errors"; exit 1; }
+  (cd frontend && npx tsc -b --noEmit) || { echo "❌ Frontend TypeScript errors"; exit 1; }
   (cd frontend && npm run check:ci) || { echo "❌ Frontend Biome errors"; exit 1; }
   (cd frontend && npm run build) || { echo "❌ Frontend build failed"; exit 1; }
+  (cd frontend && npm run test) || { echo "❌ Frontend tests failed"; exit 1; }
   echo "✅ Frontend checks passed"
 fi
 
