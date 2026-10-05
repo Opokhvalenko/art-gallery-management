@@ -19,7 +19,7 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["node"]
+    "types": ["node", "jest"]
   },
-  "exclude": ["node_modules", "dist", "test/**/*.spec.ts", "src/**/*.spec.ts"]
+  "exclude": ["node_modules", "dist", "test/**/*", "src/**/*.spec.ts"]
 }

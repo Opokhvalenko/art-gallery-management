@@ -25,3 +25,7 @@ npm-debug.log*
 
 # NOTE: prisma/dev.db and prisma/migrations are intentionally NOT ignored —
 # committed so a reviewer can run the app with zero setup (see README decisions).
+
+# e2e test database — throwaway, recreated by `pretest:e2e` on every run
+prisma/test.db
+prisma/test.db-journal
