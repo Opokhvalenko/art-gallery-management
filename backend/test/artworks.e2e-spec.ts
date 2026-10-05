@@ -78,6 +78,17 @@ describe('Artworks (e2e)', () => {
       expect(res.body.length).toBeGreaterThan(0);
     });
 
+    it('filters by artist case-insensitively for non-ASCII characters', async () => {
+      await request(app.getHttpServer())
+        .post('/artworks')
+        .send({ title: 'Nana', artist: 'Émile Zola', type: 'print', price: 100 })
+        .expect(201);
+
+      const res = await request(app.getHttpServer()).get('/artworks?artist=émile').expect(200);
+      expect(res.body).toHaveLength(1);
+      expect(res.body[0].artist).toBe('Émile Zola');
+    });
+
     it('returns an empty array (not 400) for an unknown type filter', async () => {
       const res = await request(app.getHttpServer()).get('/artworks?type=unknown').expect(200);
       expect(res.body).toEqual([]);
@@ -141,6 +152,31 @@ describe('Artworks (e2e)', () => {
         .post('/artworks')
         .send({ ...valid, title: 'a'.repeat(99) })
         .expect(201);
+    });
+
+    it('rejects a whitespace-only title as empty', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/artworks')
+        .send({ ...valid, title: '   ' })
+        .expect(400);
+      expect(res.body.error.code).toBe('VALIDATION_ERROR');
+    });
+
+    it('rejects a whitespace-only artist as empty', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/artworks')
+        .send({ ...valid, artist: '   ' })
+        .expect(400);
+      expect(res.body.error.code).toBe('VALIDATION_ERROR');
+    });
+
+    it('trims surrounding whitespace from a valid title and artist', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/artworks')
+        .send({ ...valid, title: '  Sunset Over the Ocean  ', artist: '  Claude Monet  ' })
+        .expect(201);
+      expect(res.body.title).toBe('Sunset Over the Ocean');
+      expect(res.body.artist).toBe('Claude Monet');
     });
 
     it('rejects a type outside the predefined list', async () => {

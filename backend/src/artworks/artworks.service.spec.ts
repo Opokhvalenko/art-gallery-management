@@ -77,27 +77,42 @@ describe('ArtworksService', () => {
     });
   });
 
-  describe('findAll filters', () => {
-    it('builds a case-insensitive artist contains filter only when artist is provided', async () => {
+  describe('findAll artist filter', () => {
+    /**
+     * SQLite has no `mode: 'insensitive'` in Prisma, and SQLite's own
+     * LIKE/LOWER() only case-fold ASCII — so the artist filter is applied
+     * in JS (Unicode-aware .toLowerCase()) after fetching, not pushed into
+     * the Prisma `where` clause. These tests cover exactly the case an
+     * ASCII-only filter would silently fail on.
+     */
+    it('matches case-insensitively, including non-ASCII characters', async () => {
+      prisma.artwork.findMany.mockResolvedValue([
+        dbArtwork,
+        { ...dbArtwork, id: '2', artist: 'Émile Zola' },
+      ]);
+
+      const result = await service.findAll({ artist: 'émile' });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].artist).toBe('Émile Zola');
+    });
+
+    it('does not push the artist filter into the Prisma where clause', async () => {
       prisma.artwork.findMany.mockResolvedValue([]);
 
       await service.findAll({ artist: 'Monet' });
 
       expect(prisma.artwork.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({ artist: { contains: 'Monet' } }),
-        }),
+        expect.objectContaining({ where: { type: undefined } }),
       );
     });
 
-    it('omits the artist filter entirely when not provided', async () => {
-      prisma.artwork.findMany.mockResolvedValue([]);
+    it('returns every item unfiltered when artist is not provided', async () => {
+      prisma.artwork.findMany.mockResolvedValue([dbArtwork]);
 
-      await service.findAll({});
+      const result = await service.findAll({});
 
-      expect(prisma.artwork.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: expect.objectContaining({ artist: undefined }) }),
-      );
+      expect(result).toHaveLength(1);
     });
   });
 
