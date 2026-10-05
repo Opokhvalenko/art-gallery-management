@@ -32,6 +32,7 @@ The app boots on `http://localhost:5173`. The backend must be running (see `../b
 | **React Hook Form + Zod** | One form component, two modes (create/edit); the Zod schema mirrors the backend DTO's validation rules exactly, so invalid input never reaches the API. |
 | **Tailwind CSS v4** | Zero-config via the Vite plugin — one `@import`, no `tailwind.config.js`. |
 | **sonner** | Lightweight toast notifications for mutation success/error feedback. |
+| **Headless UI** | Unstyled, accessible `Dialog` for the modal (add/edit form, delete confirmation) — focus trap, Escape-to-close, scroll lock, and an enter/exit transition, all from the library instead of a hand-rolled implementation. All visual styling is still Tailwind. |
 | **Vitest + Testing Library** | 16 tests across the critical paths — form validation, filters, all 4 list states, delete confirm flow, the artwork image hash (including a regression test for an id-collision bug found during review). Hooks are mocked rather than hitting a real `QueryClient`/network, keeping each test isolated to one component's behavior. |
 | **No Redux** | Nothing here needs global client state beyond what TanStack Query's cache already provides — adding Redux would be unjustified complexity for this scope. |
 

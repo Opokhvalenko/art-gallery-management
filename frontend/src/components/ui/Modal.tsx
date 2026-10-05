@@ -1,4 +1,5 @@
-import { type ReactNode, useEffect, useRef } from 'react';
+import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
+import type { ReactNode } from 'react';
 
 interface ModalProps {
   title: string;
@@ -6,76 +7,34 @@ interface ModalProps {
   children: ReactNode;
 }
 
-const FOCUSABLE_SELECTOR =
-  'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
-
 export function Modal({ title, onClose, children }: ModalProps) {
-  const dialogRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const previouslyFocused = document.activeElement as HTMLElement | null;
-    const dialog = dialogRef.current;
-    const focusable = dialog?.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
-    focusable?.[0]?.focus();
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        onClose();
-        return;
-      }
-      if (event.key !== 'Tab' || !dialog) {
-        return;
-      }
-      const elements = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
-      if (elements.length === 0) {
-        return;
-      }
-      const first = elements[0];
-      const last = elements[elements.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    }
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      previouslyFocused?.focus();
-    };
-  }, [onClose]);
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <button
-        type="button"
-        aria-label="Close dialog"
-        onClick={onClose}
-        className="absolute inset-0 cursor-default"
-      />
+    <Dialog open onClose={onClose} transition className="relative z-50">
       <div
-        ref={dialogRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-        className="relative w-full max-w-md rounded-lg bg-white p-6 shadow-xl"
-      >
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="text-gray-400 hover:text-gray-600"
-          >
-            ✕
-          </button>
-        </div>
-        {children}
+        className="fixed inset-0 bg-black/40 duration-200 ease-out data-[closed]:opacity-0"
+        aria-hidden="true"
+      />
+      <div className="fixed inset-0 flex items-center justify-center p-4">
+        <DialogPanel
+          transition
+          className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl duration-200 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <DialogTitle as="h2" className="text-lg font-semibold text-gray-900">
+              {title}
+            </DialogTitle>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="text-gray-400 hover:text-gray-600"
+            >
+              ✕
+            </button>
+          </div>
+          {children}
+        </DialogPanel>
       </div>
-    </div>
+    </Dialog>
   );
 }

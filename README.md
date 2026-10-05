@@ -67,6 +67,7 @@ Per-package details (scripts, stack rationale, test breakdown): [`backend/README
 | Data layer | **TanStack Query** | The 4 required UI states (loading/error/empty/success) come from `isPending`/`isError`/`data` directly; also gives cache invalidation and optimistic updates for delete for free. |
 | Forms | **React Hook Form + Zod** | One form component in two modes (create/edit); the Zod schema mirrors the backend DTO's rules exactly. |
 | Styling | **Tailwind CSS v4** | Zero-config via the Vite plugin. |
+| Accessible primitives | **Headless UI** | The modal (add/edit form, delete confirmation) uses `Dialog` instead of a hand-rolled focus trap — the library's own focus management, Escape handling, and scroll lock are better exercised than a one-off implementation would be, with a built-in enter/exit transition as a bonus. Styling stays 100% Tailwind; the library is unstyled by design. |
 
 ## Decisions on ambiguities in the brief
 
