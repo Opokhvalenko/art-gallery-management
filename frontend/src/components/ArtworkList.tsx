@@ -1,5 +1,5 @@
 import { useArtworksQuery } from '../hooks/useArtworks';
-import type { ArtworkQueryParams } from '../types/artwork';
+import type { Artwork, ArtworkQueryParams } from '../types/artwork';
 import { ArtworkCard } from './ArtworkCard';
 import { EmptyState } from './ui/EmptyState';
 import { ErrorState } from './ui/ErrorState';
@@ -11,9 +11,10 @@ const GRID_CLASSES = 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4';
 
 interface ArtworkListProps {
   queryParams: ArtworkQueryParams;
+  onEdit: (artwork: Artwork) => void;
 }
 
-export function ArtworkList({ queryParams }: ArtworkListProps) {
+export function ArtworkList({ queryParams, onEdit }: ArtworkListProps) {
   const { data, isPending, isError, error, refetch } = useArtworksQuery(queryParams);
 
   if (isPending) {
@@ -38,7 +39,7 @@ export function ArtworkList({ queryParams }: ArtworkListProps) {
   return (
     <div className={GRID_CLASSES}>
       {data.map((artwork) => (
-        <ArtworkCard key={artwork.id} artwork={artwork} />
+        <ArtworkCard key={artwork.id} artwork={artwork} onEdit={onEdit} />
       ))}
     </div>
   );
