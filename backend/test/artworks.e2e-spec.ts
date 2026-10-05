@@ -7,10 +7,9 @@ import { AllExceptionsFilter } from '../src/common/filters/http-exception.filter
 import { validationExceptionFactory } from '../src/common/filters/validation-exception-factory';
 import { PrismaService } from '../src/common/prisma/prisma.service';
 
-// Isolated SQLite file, never touches the committed dev.db used for local
-// dev / the reviewer's demo. Applied via `pretest:e2e` (prisma migrate
-// deploy) before this file runs.
-process.env.DATABASE_URL = 'file:./test.db';
+// DATABASE_URL/FRONTEND_URL are set in test/setup-e2e.ts (runs before this
+// file loads — see the comment there for why that timing matters).
+// Migrations for the isolated test.db are applied via `pretest:e2e`.
 
 describe('Artworks (e2e)', () => {
   let app: INestApplication;
