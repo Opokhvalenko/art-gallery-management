@@ -100,6 +100,7 @@ export function ArtworkForm(props: ArtworkFormProps) {
         <input
           id="form-title"
           type="text"
+          data-autofocus
           className={INPUT_CLASSES}
           {...a11yProps('title')}
           {...register('title')}
