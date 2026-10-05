@@ -20,7 +20,7 @@ export function ArtworkCard({ artwork, onEdit }: ArtworkCardProps) {
   const imageSrc = getArtworkImage(artwork.type, artwork.id);
 
   return (
-    <article className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md">
+    <article className="overflow-hidden rounded-xl border-2 border-gray-200 bg-white shadow-sm transition-all hover:shadow-md focus-within:border-green-500 focus-within:ring-4 focus-within:ring-green-500/40">
       <div className="relative aspect-video overflow-hidden bg-gray-100">
         {imageSrc && !imageFailed ? (
           <img
