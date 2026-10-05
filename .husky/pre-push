@@ -1,0 +1,28 @@
+#!/usr/bin/env sh
+export CI=true
+
+BASE_REF="origin/main"
+if ! git rev-parse --verify "$BASE_REF" >/dev/null 2>&1; then
+  BASE_REF="main"
+fi
+CHANGED=$(git diff --name-only "$BASE_REF"...HEAD 2>/dev/null)
+
+if [ -z "$CHANGED" ]; then
+  echo "ℹ️  No changes vs $BASE_REF — skipping pre-push checks."
+  exit 0
+fi
+
+if echo "$CHANGED" | grep -q '^backend/'; then
+  echo "🔍 Backend changed → typecheck + test..."
+  (cd backend && npx tsc --noEmit) || { echo "❌ Backend TypeScript errors"; exit 1; }
+  (cd backend && npm run test -- --passWithNoTests) || { echo "❌ Backend tests failed"; exit 1; }
+  echo "✅ Backend checks passed"
+fi
+
+if echo "$CHANGED" | grep -q '^frontend/'; then
+  echo "🔍 Frontend changed → typecheck + lint + build..."
+  (cd frontend && npx tsc --noEmit) || { echo "❌ Frontend TypeScript errors"; exit 1; }
+  (cd frontend && npm run check:ci) || { echo "❌ Frontend Biome errors"; exit 1; }
+  (cd frontend && npm run build) || { echo "❌ Frontend build failed"; exit 1; }
+  echo "✅ Frontend checks passed"
+fi
