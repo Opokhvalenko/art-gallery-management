@@ -1,0 +1,84 @@
+@baseUrl = http://localhost:3000
+
+### List all artworks
+GET {{baseUrl}}/artworks
+
+### List sorted by price ascending
+GET {{baseUrl}}/artworks?price=asc
+
+### List sorted by price descending
+GET {{baseUrl}}/artworks?price=desc
+
+### Filter by artist (case-insensitive, partial match)
+GET {{baseUrl}}/artworks?artist=liam
+
+### Filter by type
+GET {{baseUrl}}/artworks?type=painting
+
+### Combined filters + sort
+GET {{baseUrl}}/artworks?price=asc&artist=liam&type=sculpture
+
+### Invalid sort value -> 400
+GET {{baseUrl}}/artworks?price=sideways
+
+### Get a single artwork by id (replace with a real id from the list above)
+GET {{baseUrl}}/artworks/REPLACE_WITH_ID
+
+### Get a non-existent artwork -> 404
+GET {{baseUrl}}/artworks/does-not-exist
+
+### Create a new artwork
+POST {{baseUrl}}/artworks
+Content-Type: application/json
+
+{
+  "title": "Sunset Over the Ocean",
+  "artist": "Claude Monet",
+  "type": "painting",
+  "price": 4500,
+  "availability": true
+}
+
+### Create without availability -> defaults to true
+POST {{baseUrl}}/artworks
+Content-Type: application/json
+
+{
+  "title": "Untitled Study",
+  "artist": "Jane Doe",
+  "type": "print",
+  "price": 1200
+}
+
+### Validation: empty title / artist, unknown type, negative price -> 400 with field-level details
+POST {{baseUrl}}/artworks
+Content-Type: application/json
+
+{
+  "title": "",
+  "artist": "",
+  "type": "banana",
+  "price": -5
+}
+
+### Partial update (replace with a real id)
+PUT {{baseUrl}}/artworks/REPLACE_WITH_ID
+Content-Type: application/json
+
+{
+  "price": 9999
+}
+
+### Update a non-existent artwork -> 404
+PUT {{baseUrl}}/artworks/does-not-exist
+Content-Type: application/json
+
+{
+  "price": 100
+}
+
+### Delete an artwork (replace with a real id) -> 204
+DELETE {{baseUrl}}/artworks/REPLACE_WITH_ID
+
+### Delete a non-existent artwork -> 404
+DELETE {{baseUrl}}/artworks/does-not-exist
