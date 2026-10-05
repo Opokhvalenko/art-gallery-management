@@ -1,10 +1,15 @@
 #!/usr/bin/env sh
 export CI=true
 
-BASE_REF="origin/main"
-if ! git rev-parse --verify "$BASE_REF" >/dev/null 2>&1; then
-  BASE_REF="main"
+# First-ever push (no main anywhere yet) — nothing meaningful to diff against, skip.
+if ! git rev-parse --verify origin/main >/dev/null 2>&1 && ! git rev-parse --verify main >/dev/null 2>&1; then
+  echo "ℹ️  No main branch yet — skipping pre-push checks (first push)."
+  exit 0
 fi
+
+BASE_REF="origin/main"
+git rev-parse --verify "$BASE_REF" >/dev/null 2>&1 || BASE_REF="main"
+
 CHANGED=$(git diff --name-only "$BASE_REF"...HEAD 2>/dev/null)
 
 if [ -z "$CHANGED" ]; then
@@ -26,3 +31,5 @@ if echo "$CHANGED" | grep -q '^frontend/'; then
   (cd frontend && npm run build) || { echo "❌ Frontend build failed"; exit 1; }
   echo "✅ Frontend checks passed"
 fi
+
+exit 0
