@@ -1,33 +1,17 @@
-import { useArtworksQuery } from './hooks/useArtworks';
+import { ArtworkList } from './components/ArtworkList';
 
-/**
- * Temporary sanity check that the API layer + TanStack Query wiring
- * actually works end to end against the real backend. The real UI
- * (list, card, 4 states, filters, form...) lands in the following
- * branches — this file gets replaced there.
- */
 function App() {
-  const { data, isPending, isError, error } = useArtworksQuery({});
-
-  if (isPending) {
-    return <p className="p-6 text-gray-500">Loading artworks…</p>;
-  }
-
-  if (isError) {
-    return <p className="p-6 text-red-600">Failed to load artworks: {error.message}</p>;
-  }
-
   return (
-    <main className="p-6">
-      <h1 className="text-xl font-semibold text-gray-900">Art Gallery ({data.length})</h1>
-      <ul className="mt-4 space-y-1">
-        {data.map((artwork) => (
-          <li key={artwork.id} className="text-gray-700">
-            {artwork.title} — {artwork.artist} (${artwork.price})
-          </li>
-        ))}
-      </ul>
-    </main>
+    <div className="min-h-screen bg-gray-50">
+      <header className="border-b border-gray-200 bg-white px-6 py-4">
+        <h1 className="text-xl font-semibold text-gray-900">Art Gallery Manager</h1>
+        <p className="text-sm text-gray-500">Explore Our Collection</p>
+      </header>
+
+      <main className="p-6">
+        <ArtworkList queryParams={{}} />
+      </main>
+    </div>
   );
 }
 
