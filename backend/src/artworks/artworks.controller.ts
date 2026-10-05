@@ -21,7 +21,6 @@ import {
 import { ArtworksService } from './artworks.service';
 import { CreateArtworkDto } from './dto/create-artwork.dto';
 import { QueryArtworkDto } from './dto/query-artwork.dto';
-import { UpdateArtworkDto } from './dto/update-artwork.dto';
 import { ArtworkEntity } from './entities/artwork.entity';
 
 @ApiTags('artworks')
@@ -54,10 +53,10 @@ export class ArtworksController {
   }
 
   @Put(':id')
-  @ApiOperation({ summary: 'Update an existing artwork (partial update)' })
+  @ApiOperation({ summary: 'Replace an existing artwork — same body and validation as POST' })
   @ApiParam({ name: 'id', example: 'cmuuyh1x00000rton7b580ubs' })
   @ApiOkResponse({ type: ArtworkEntity })
-  update(@Param('id') id: string, @Body() dto: UpdateArtworkDto): Promise<ArtworkEntity> {
+  update(@Param('id') id: string, @Body() dto: CreateArtworkDto): Promise<ArtworkEntity> {
     return this.artworksService.update(id, dto);
   }
 

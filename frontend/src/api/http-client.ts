@@ -1,6 +1,8 @@
 import type { ApiErrorBody, ApiErrorDetail } from '../types/artwork';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+/** Falls back to the backend's default local port if `.env` wasn't copied. */
+const DEFAULT_API_URL = 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || DEFAULT_API_URL;
 
 export class ApiError extends Error {
   readonly status: number;
@@ -22,11 +24,26 @@ function isApiErrorBody(value: unknown): value is ApiErrorBody {
 
 const HttpStatus = { NoContent: 204 } as const;
 
+const NETWORK_ERROR_MESSAGE = `Can't reach the server at ${API_BASE_URL}. Is the backend running?`;
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === 'AbortError';
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...init,
-    headers: { 'Content-Type': 'application/json', ...init?.headers },
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...init,
+      headers: { 'Content-Type': 'application/json', ...init?.headers },
+    });
+  } catch (error: unknown) {
+    // Cancellation (TanStack Query's `signal`) must propagate unchanged.
+    if (isAbortError(error)) {
+      throw error;
+    }
+    throw new ApiError(0, 'NETWORK_ERROR', NETWORK_ERROR_MESSAGE);
+  }
 
   if (response.status === HttpStatus.NoContent) {
     return undefined as T;
@@ -45,7 +62,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const httpClient = {
-  get: <T>(path: string): Promise<T> => request<T>(path),
+  get: <T>(path: string, signal?: AbortSignal): Promise<T> => request<T>(path, { signal }),
   post: <T>(path: string, data: unknown): Promise<T> =>
     request<T>(path, { method: 'POST', body: JSON.stringify(data) }),
   put: <T>(path: string, data: unknown): Promise<T> =>

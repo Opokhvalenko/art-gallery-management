@@ -15,6 +15,7 @@ import {
   ARTWORK_TITLE_MAX_LENGTH,
   ARTWORK_TYPES,
   type ArtworkType,
+  PRICE_MAX_DECIMAL_PLACES,
 } from '../../common/constants/artwork-types.constant';
 
 function trimString({ value }: { value: unknown }): unknown {
@@ -40,8 +41,11 @@ export class CreateArtworkDto {
   @IsIn(ARTWORK_TYPES)
   type!: ArtworkType;
 
-  @ApiProperty({ example: 4500, description: 'Must be greater than 0' })
-  @IsNumber()
+  @ApiProperty({ example: 4500, description: 'Must be greater than 0, at most 2 decimal places' })
+  @IsNumber(
+    { maxDecimalPlaces: PRICE_MAX_DECIMAL_PLACES },
+    { message: `price must be a number with at most ${PRICE_MAX_DECIMAL_PLACES} decimal places` },
+  )
   @IsPositive()
   price!: number;
 

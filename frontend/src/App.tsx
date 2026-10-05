@@ -84,11 +84,7 @@ function App() {
           title={formDialog.mode === 'create' ? 'Add artwork' : 'Edit artwork'}
           onClose={() => setFormDialog(null)}
         >
-          <ArtworkForm
-            mode={formDialog.mode}
-            artwork={formDialog.mode === 'edit' ? formDialog.artwork : undefined}
-            onClose={() => setFormDialog(null)}
-          />
+          <ArtworkForm {...formDialog} onClose={() => setFormDialog(null)} />
         </Modal>
       )}
     </div>

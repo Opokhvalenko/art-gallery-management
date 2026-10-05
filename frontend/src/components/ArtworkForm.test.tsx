@@ -36,7 +36,34 @@ describe('ArtworkForm', () => {
 
     expect(await screen.findByText('Title is required')).toBeInTheDocument();
     expect(screen.getByText('Artist is required')).toBeInTheDocument();
-    expect(screen.getByText('Price must be greater than 0')).toBeInTheDocument();
+    expect(screen.getByText('Price is required')).toBeInTheDocument();
+    expect(createMutate).not.toHaveBeenCalled();
+  });
+
+  it('links each invalid field to its error message for screen readers', async () => {
+    vi.mocked(useCreateArtwork).mockReturnValue(mockCreateMutation(vi.fn()));
+    vi.mocked(useUpdateArtwork).mockReturnValue(mockUpdateMutation(vi.fn()));
+
+    render(<ArtworkForm mode="create" onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /add artwork/i }));
+
+    const title = screen.getByLabelText('Title');
+    await waitFor(() => expect(title).toHaveAttribute('aria-invalid', 'true'));
+    expect(title).toHaveAccessibleDescription('Title is required');
+  });
+
+  it('rejects a price with more than 2 decimal places', async () => {
+    const createMutate = vi.fn();
+    vi.mocked(useCreateArtwork).mockReturnValue(mockCreateMutation(createMutate));
+    vi.mocked(useUpdateArtwork).mockReturnValue(mockUpdateMutation(vi.fn()));
+
+    render(<ArtworkForm mode="create" onClose={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Small Sketch' } });
+    fireEvent.change(screen.getByLabelText('Artist'), { target: { value: 'Jane Doe' } });
+    fireEvent.change(screen.getByLabelText('Price'), { target: { value: '10.555' } });
+    fireEvent.click(screen.getByRole('button', { name: /add artwork/i }));
+
+    expect(await screen.findByText('Price can have at most 2 decimal places')).toBeInTheDocument();
     expect(createMutate).not.toHaveBeenCalled();
   });
 

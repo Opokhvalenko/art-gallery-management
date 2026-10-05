@@ -17,15 +17,15 @@ export function ArtworkCard({ artwork, onEdit }: ArtworkCardProps) {
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
   const deleteMutation = useDeleteArtwork();
-  const imageSrc = getArtworkImage(artwork.type, artwork.id);
+  const imageSrc = getArtworkImage(artwork.title);
 
   return (
     <article className="overflow-hidden rounded-xl border-2 border-gray-200 bg-white shadow-sm transition-all hover:shadow-md focus-within:border-green-500 focus-within:ring-4 focus-within:ring-green-500/40">
-      <div className="relative aspect-video overflow-hidden bg-gray-100">
+      <div className="aspect-video overflow-hidden bg-gray-100">
         {imageSrc && !imageFailed ? (
           <img
             src={imageSrc}
-            alt={`Example ${artwork.type} artwork`}
+            alt={`${artwork.title} by ${artwork.artist}`}
             className="h-full w-full object-contain"
             onError={() => setImageFailed(true)}
           />
@@ -36,33 +36,6 @@ export function ArtworkCard({ artwork, onEdit }: ArtworkCardProps) {
             {getArtworkInitials(artwork.title)}
           </div>
         )}
-
-        <div className="absolute top-2 right-2 flex gap-1">
-          <button
-            type="button"
-            onClick={() => onEdit(artwork)}
-            aria-label={`Edit ${artwork.title}`}
-            className="rounded-full bg-white/90 px-2 py-1 text-xs font-medium text-gray-700 shadow-sm hover:bg-white"
-          >
-            Edit
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsConfirmingDelete(true)}
-            aria-label={`Delete ${artwork.title}`}
-            className="rounded-full bg-white/90 px-2 py-1 text-xs font-medium text-red-600 shadow-sm hover:bg-white"
-          >
-            Delete
-          </button>
-        </div>
-
-        <span
-          className={`absolute bottom-2 left-2 rounded-full px-2 py-1 text-xs font-medium shadow-sm ${
-            artwork.availability ? 'bg-white/90 text-green-700' : 'bg-white/90 text-gray-600'
-          }`}
-        >
-          {artwork.availability ? 'For sale' : 'Exhibition only'}
-        </span>
       </div>
 
       <div className="p-4">
@@ -72,7 +45,38 @@ export function ArtworkCard({ artwork, onEdit }: ArtworkCardProps) {
             ${artwork.price.toLocaleString('en-US')}
           </span>
         </div>
-        <p className="text-sm text-gray-500">By: {artwork.artist}</p>
+        <p className="text-sm text-gray-500">
+          <span className="capitalize">{artwork.type}</span> · By: {artwork.artist}
+        </p>
+
+        <div className="mt-3 flex items-center justify-between gap-2 border-t border-gray-100 pt-3">
+          <span
+            className={`rounded-full px-2 py-1 text-xs font-medium ${
+              artwork.availability ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'
+            }`}
+          >
+            {artwork.availability ? 'For sale' : 'Exhibition only'}
+          </span>
+
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={() => onEdit(artwork)}
+              aria-label={`Edit ${artwork.title}`}
+              className="min-h-9 rounded-md px-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsConfirmingDelete(true)}
+              aria-label={`Delete ${artwork.title}`}
+              className="min-h-9 rounded-md px-3 text-sm font-medium text-red-600 hover:bg-red-50"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
       </div>
 
       {isConfirmingDelete && (

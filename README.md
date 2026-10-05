@@ -2,9 +2,7 @@
 
 A small virtual gallery manager: browse, filter, sort, create, edit and delete artworks. Built for the Techstack Trainee Full-Stack JS test task — both the frontend (React SPA) and backend (NestJS API) are implemented, with the backend as the frontend's real data source (no LocalStorage fallback).
 
-**Live:** Frontend — _pending deploy_ · Backend — _pending deploy_ · Swagger — _pending deploy_
-
-> Live links go up once deploy is done — see [How to run locally](#how-to-run-locally) in the meantime; `npm install && npm run dev` in each folder is the whole setup.
+Setup is three commands per folder, no database or Docker needed — see [How to run locally](#how-to-run-locally).
 
 ![Artwork list with filters, sort, and per-card Edit/Delete actions](docs/screenshots/gallery-list.jpg)
 
@@ -18,7 +16,7 @@ A small virtual gallery manager: browse, filter, sort, create, edit and delete a
 | `GET /artworks/:id` | ✅ |
 | `POST /artworks` with validation → 400 on invalid input | ✅ |
 | `DELETE /artworks/:id` | ✅ |
-| `PUT /artworks/:id` — listed as optional in the brief | ✅ implemented, not skipped |
+| `PUT /artworks/:id` — listed as optional in the brief; full replace, same validation as POST | ✅ implemented, not skipped |
 | Seed: 4 artworks on first run | ✅ |
 | Unified error shape, Swagger docs, CI, deploy config | ✅ |
 
@@ -29,12 +27,14 @@ A small virtual gallery manager: browse, filter, sort, create, edit and delete a
 | List view (title, artist, type, price, availability) | ✅ |
 | Sort by price (asc/desc) | ✅ |
 | Filter by artist + type | ✅ |
-| Add form: title/artist required, type from predefined list, price > 0, availability boolean | ✅ |
+| Add form: title/artist required, type from predefined list, price > 0 (max 2 decimals), availability boolean | ✅ |
 | Delete button per card | ✅ |
 | Persistence across reload (via the real API, not LocalStorage) | ✅ |
 | Edit — not required by the brief | ✅ implemented anyway, same form as create |
 
 ## How to run locally
+
+**Prerequisites:** Node.js 22 LTS (the version CI uses; Node 20.19+ or 22.12+ also works — Vite's own requirement) and npm.
 
 ```bash
 git clone <this-repo> && cd art-gallery-management
@@ -43,16 +43,26 @@ git clone <this-repo> && cd art-gallery-management
 cd backend
 npm install
 cp .env.example .env
-npm run start:dev
+npm run dev
 
 # frontend — http://localhost:5173 (separate terminal)
-cd frontend
+cd ../frontend
 npm install
 cp .env.example .env
 npm run dev
 ```
 
-No database setup needed — `backend/prisma/dev.db` is committed with the 4 seed artworks, so `npm install && npm run start:dev` is the entire backend setup. Swagger UI: `http://localhost:3000/api/docs`.
+No database setup needed — `backend/prisma/dev.db` is committed with the 4 seed artworks. Open `http://localhost:5173` for the app and `http://localhost:3000/api/docs` for Swagger.
+
+### Project structure
+
+```
+art-gallery-management/
+├── backend/    NestJS API — artworks module, DTOs, Prisma schema + SQLite, e2e tests
+├── frontend/   React SPA — components, TanStack Query hooks, Zod schema, RTL tests
+├── docs/       screenshot used in this README
+└── .github/    CI: typecheck, lint, build and tests for both packages
+```
 
 Per-package details (scripts, stack rationale, test breakdown): [`backend/README.md`](backend/README.md), [`frontend/README.md`](frontend/README.md).
 
@@ -60,28 +70,28 @@ Per-package details (scripts, stack rationale, test breakdown): [`backend/README
 
 | Layer | Choice | Why |
 |---|---|---|
-| Backend framework | **NestJS 11** (not Express) | First-listed option in the brief; the author has direct production experience with it (Heartland Homes — 26 endpoints, ServiceDesk Pro), making it the faster, not slower, choice; built-in DI/Pipes/Filters/Swagger give a documented, validated API without hand-rolled middleware. Deliberately not NestJS 12 — its latest `@nestjs/config` line ships ESM-only, which breaks the standard Jest + ts-jest setup. |
-| Database | **SQLite** (not Postgres) | The reviewer needs to run this with `npm i && npm run dev` — Postgres would mean Docker or a cloud instance just to review a CRUD test task. SQLite is a committed file: zero external dependencies. |
-| ORM | **Prisma** (not TypeORM/Mongoose/Sequelize) | ORM is marked optional in the brief, so the suggested list is guidance, not a constraint. The author has direct recent experience with Prisma (Heartland, ServiceDesk, AdTell) and none with TypeORM — learning a new ORM against this deadline would risk exactly the kind of rework this project was planned to avoid. |
-| Frontend framework | **React 19 + Vite + TypeScript strict** | The author's strongest stack (AdTell, Heartland Homes). |
+| Backend framework | **NestJS 11** (not Express) | First option in the brief and the framework I've used in production (Heartland Homes, ServiceDesk Pro). DI, Pipes, Filters and Swagger come built in, so validation and error handling don't need hand-rolled middleware. |
+| Database | **SQLite** (not Postgres) | A reviewer can run it without installing a database — Postgres would mean Docker or a cloud instance just to review a CRUD task. SQLite is a single committed file. |
+| ORM | **Prisma** (not TypeORM/Mongoose/Sequelize) | The ORM is optional in the brief, so its list is a suggestion. I've used Prisma in three projects and TypeORM in none — choosing the tool I know well kept the deadline risk low. |
+| Frontend framework | **React 19 + Vite + TypeScript strict** | My strongest stack (AdTell, Heartland Homes). |
 | Data layer | **TanStack Query** | The 4 required UI states (loading/error/empty/success) come from `isPending`/`isError`/`data` directly; also gives cache invalidation and optimistic updates for delete for free. |
 | Forms | **React Hook Form + Zod** | One form component in two modes (create/edit); the Zod schema mirrors the backend DTO's rules exactly. |
 | Styling | **Tailwind CSS v4** | Zero-config via the Vite plugin. |
-| Accessible primitives | **Headless UI** | The modal (add/edit form, delete confirmation) uses `Dialog` instead of a hand-rolled focus trap — the library's own focus management, Escape handling, and scroll lock are better exercised than a one-off implementation would be, with a built-in enter/exit transition as a bonus. Styling stays 100% Tailwind; the library is unstyled by design. |
+| Accessible primitives | **Headless UI** | The add/edit and delete-confirm modals use its `Dialog` for focus trap, Escape and scroll lock instead of a hand-rolled version. It's unstyled, so all styling stays in Tailwind. |
 
 ## Decisions on ambiguities in the brief
 
-The task description leaves several things unspecified. Each was resolved deliberately — not by accident — and is listed here because this is usually the part a reviewer actually wants to see.
+The brief leaves several things open. Each choice below was made deliberately.
 
 | # | Gap in the brief | Decision |
 |---|---|---|
-| 1 | The `Artwork` model has no image field, but the UI mockup shows pictures | The model wasn't extended — the brief's data contract is authoritative. Each card shows a representative, public-domain image for its `type` (not a fabricated picture of that specific piece), shown in full with `object-contain` — cropping an actual artwork's composition felt wrong for a gallery app, even for a placeholder. Painting and digital have two candidate images each (an artwork's id picks deterministically between them via a hash, so two artworks of the same type don't show an identical picture); sculpture and photography have one; print has none after a curation pass and falls back to a CSS gradient + initials — the same fallback used if an image fails to load, or for a future type with no image at all. Images in use: Van Gogh's *The Starry Night* and Vermeer's *Girl with a Pearl Earring* (painting), Degas' *Little Dancer of Fourteen Years* (sculpture), Dorothea Lange's *Migrant Mother* (photography), NASA/ESA's *Pillars of Creation* and the *Whirlpool Galaxy* (digital) — all public domain, via Wikimedia Commons; the sculpture image was deliberately picked clothed rather than a classic nude bronze (e.g. *David*), since a job-application screenshot is the wrong place for that call to be made by default. The first hash function tried (`(hash * 31 + charCode) % 997`) collided on this app's own seed data — two ids from the same `createMany()` batch share a long common prefix and differ by one digit, which was enough to land both in the same bucket — caught by eye in a screenshot, not by the test that was supposedly covering it; replaced with FNV-1a and locked in with a regression test (see `frontend/src/lib/artwork-placeholder.test.ts`). |
+| 1 | The `Artwork` model has no image field, but the UI mockup shows pictures | The model wasn't extended — the brief's data contract is authoritative. The 4 seed artworks are real public-domain works (Van Gogh's *The Starry Night*, Vermeer's *Girl with a Pearl Earring*, NASA/ESA's *Pillars of Creation*, Degas' *Little Dancer of Fourteen Years* — all via Wikimedia Commons), each shown with its own image keyed by exact title, not by `type` — a type-based guess risks showing one artwork's picture on a different artwork of the same type. Any other artwork falls back to a gradient + initials, same as a known image that fails to load. |
 | 2 | `id: string`, but the example URL is `/artworks/3` | `id` is a string (`cuid`); the numeric example in the brief is illustrative, not a format requirement. |
 | 3 | "First 4 artworks on start" — seed or pagination? | Read as a one-time seed: 4 artworks committed via `prisma/seed.ts`, not pagination. |
 | 4 | `artist` max length (50) is only stated in the backend requirements, not the frontend's | Applied on both sides — one Zod schema on the frontend mirrors the backend DTO. |
 | 5 | "Predefined types" — no list given | Defined one: `painting`, `sculpture`, `photography`, `digital`, `print`, shared as one constant on both frontend and backend. The backend returns 400 on an unknown type. |
 | 6 | `availability` is required on the frontend form but optional on the backend | Backend: optional, defaults to `true`. Frontend: the checkbox always sends an explicit boolean. |
-| 7 | `price: number` is money | Modeled as Prisma `Decimal`, not `Float`, to avoid floating-point rounding on currency. Decimal serializes to JSON as a string by default — the service layer explicitly calls `.toNumber()` so the frontend always receives a real number, not `"4500"`. |
+| 7 | `price: number` is money | Modeled as Prisma `Decimal`, not `Float`, to avoid floating-point rounding on currency, and limited to 2 decimal places (cents) on both frontend and backend. Decimal serializes to JSON as a string by default — the service layer explicitly calls `.toNumber()` so the frontend always receives a real number, not `"4500"`. |
 | 8 | Sort query format | Implemented exactly as the brief shows it — `?price=asc`, not `?sort=price&order=asc`. |
 | 9 | Artist filter — exact match or partial? | Case-insensitive, partial match. Neither Prisma's `mode: 'insensitive'` nor SQLite's own `LIKE`/`LOWER()` case-fold beyond ASCII, so the filter is applied in JS (`String.prototype.toLowerCase()`, which is Unicode-aware) after the query, not pushed into SQL — verified with a real non-ASCII name (`"Émile Zola"`), not just an uppercase/lowercase ASCII check. |
 | 10 | Error codes aren't specified | 400 for validation, 404 for a missing id on GET/PUT/DELETE, 500 for anything else — all through one global exception filter with a single response shape (see [API contract](#api-contract)). |
@@ -89,6 +99,7 @@ The task description leaves several things unspecified. Each was resolved delibe
 | 12 | Nothing about pagination | Not implemented — at 4–50 records it would add complexity without value; noted below instead of built speculatively. |
 | 13 | "Gallery admins" mentioned nowhere else, no auth requirement | Not implemented — out of scope for the brief. Noted below with where a guard would go if it were needed. |
 | 14 | The UI mockup shows one global "Remove Artwork" button under the grid, but the brief's own text says "each listing has a delete button" | Followed the text, not the mockup — the mockup's single button isn't wired to a specific artwork, so it can't actually delete one. Implemented per-card Edit/Delete buttons instead. |
+| 15 | `PUT` — "same validation as POST", but `availability` is optional there | `PUT` is a full replace: a partial body returns 400 (partial updates would be a `PATCH`, not added). An omitted `availability` resets to `true`, exactly as on create. |
 
 ## API contract
 
@@ -102,24 +113,24 @@ DELETE /artworks/:id                                       → 204 | 404
 
 Interactive docs: `/api/docs` (Swagger). Full request/response examples: [`backend/requests.http`](backend/requests.http).
 
-**Validation:** `title` required, ≤99 chars · `artist` required, ≤50 chars · `type` one of the predefined list · `price` required, > 0 · `availability` optional, defaults to `true`.
+**Validation:** `title` required, ≤99 chars · `artist` required, ≤50 chars · `type` one of the predefined list · `price` required, > 0, at most 2 decimal places · `availability` optional, defaults to `true`.
 
-**Error shape** — every error, from every source:
+**Error shape** — the same for validation errors, 404s, unknown routes and unexpected failures:
 
 ```json
 {
   "error": {
     "code": "VALIDATION_ERROR",
     "message": "Request validation failed",
-    "details": [{ "field": "price", "message": "Price must be greater than 0" }]
+    "details": [{ "field": "price", "message": "price must be a positive number" }]
   }
 }
 ```
 
 ## Tests
 
-- **Backend — 32 tests**: 24 e2e (`backend/test/artworks.e2e-spec.ts`, every case in the API contract above — sort/filter behavior, every validation edge case including whitespace-only input and non-ASCII artist names, 404s, the Decimal→number mapping) + 8 unit (`backend/src/artworks/artworks.service.spec.ts`).
-- **Frontend — 16 tests** (Vitest + Testing Library): form validation and the edit flow, filters, all 4 list states, the delete confirm dialog, the artwork image hash. See [`frontend/README.md`](frontend/README.md#tests) for the breakdown.
+- **Backend — 39 tests**: 30 e2e against an isolated SQLite database (`backend/test/artworks.e2e-spec.ts` — sorting and filters, validation edge cases such as whitespace-only input and a 99-character title, non-ASCII artist names, price precision, PUT replace semantics, 404s, Decimal→number, security headers) + 9 unit (`backend/src/artworks/artworks.service.spec.ts`).
+- **Frontend — 21 tests** (Vitest + Testing Library): form validation and accessible error messages, the edit flow, filters, all 4 list states, the delete confirm dialog, the type badge, the artwork image lookup, network-error handling. See [`frontend/README.md`](frontend/README.md#tests) for the breakdown.
 - **CI**: `.github/workflows/ci.yml` runs typecheck, lint, build and the full test suite for both packages on every push and PR.
 
 ## What I'd add next
@@ -129,11 +140,8 @@ Interactive docs: `/api/docs` (Swagger). Full request/response examples: [`backe
 - **Rate limiting** (`@nestjs/throttler`) — cheap to add, skipped to stay inside scope.
 - **Image upload** — the brief's `Artwork` model has no image field, so this wasn't added; the frontend placeholder is a deliberate substitute, not a gap.
 - **Playwright e2e** on the frontend — RTL component tests were judged sufficient for this scope; e2e would close the gap between "components behave correctly in isolation" and "the real user flow works end-to-end."
-- **A genuine narrow-viewport screenshot check** — the responsive CSS was verified by code review against Tailwind's breakpoints rather than an actual mobile-width screenshot, because of a tooling limitation hit mid-task (browser automation's window resize didn't change the real viewport in this environment, and installing a second browser for testing had no network access). Noted here rather than silently assumed to be fine.
-- **Abort in-flight requests on cancellation** — `useArtworksQuery` doesn't forward TanStack Query's `signal` to `fetch`, so when a mutation calls `cancelQueries`, the client discards the response but the request itself keeps running on the wire. Not a correctness issue (no stale data reaches the cache), just wasted load on rapid filter changes.
-- **`placeholderData`/`keepPreviousData` on the list query** — every filter change briefly shows the full skeleton grid instead of keeping the previous results visible while the new filter loads; a one-line TanStack Query option away.
 - **A persistent disk for the deployed database** — Render's free web-service plan has an ephemeral filesystem, so a `POST`/`PUT`/`DELETE` made against the live backend reverts to the 4 seed rows on the next restart, deploy, or idle spin-down. Fine for reviewing the API's behavior; a real deployment would mount a persistent disk (or move off SQLite) to keep writes.
 
 ## AI usage
 
-This project was built with an AI coding assistant as a pair-programming tool, under direction and review at every step — not generated unattended and submitted as-is. The overall architecture, the decisions in the table above, and the scope (both parts, PUT included, tests, CI) were deliberate choices, not AI defaults. In practice that meant: writing code in small reviewed increments (one branch per feature), running the actual test suites and a real browser against the running app after every change rather than trusting that code compiles, and treating a failing check as something to fix immediately rather than carry forward. Several real bugs were caught this way during the build — a locale-dependent price format, a Decimal-to-string serialization issue, a silently no-op typecheck in a pre-push hook, an artist filter that only looked Unicode-safe because of an SQLite accident, whitespace-only input passing a "required" check, a modal dialog missing a real focus trap, a placeholder-image hash collision that a passing test suite missed but a screenshot caught immediately — documented inline in the relevant commits rather than smoothed over. AI accelerated the mechanical parts of implementation; the decisions, the verification, and the final responsibility for correctness are the author's.
+I used an AI coding assistant as a pair-programming tool, under my direction and review at every step — not generated unattended and submitted as-is. I made the architecture, the decisions in the table above, and the scope call (both parts, PUT included, tests, CI) myself, then verified each change by running the real test suites and a real browser against the running app rather than trusting that it compiled. That process caught several real bugs during the build — a locale-dependent price format, a Decimal-to-string serialization issue, an artist filter that only looked Unicode-safe, a modal missing a real focus trap — documented inline in the relevant commits. The decisions, the verification, and the responsibility for correctness are mine.

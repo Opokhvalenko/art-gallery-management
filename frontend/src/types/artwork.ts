@@ -4,7 +4,7 @@ export interface Artwork {
   id: string;
   title: string;
   artist: string;
-  type: string;
+  type: ArtworkType;
   price: number;
   availability: boolean;
   createdAt: string;
@@ -19,7 +19,7 @@ export interface CreateArtworkPayload {
   availability?: boolean;
 }
 
-export type UpdateArtworkPayload = Partial<CreateArtworkPayload>;
+export type UpdateArtworkPayload = CreateArtworkPayload;
 
 export interface ArtworkQueryParams {
   price?: 'asc' | 'desc';

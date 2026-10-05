@@ -116,21 +116,40 @@ describe('ArtworksService', () => {
     });
   });
 
-  describe('update', () => {
-    it('throws NotFoundException instead of calling update when the artwork does not exist', async () => {
-      prisma.artwork.findUnique.mockResolvedValue(null);
+  const recordNotFound = new Prisma.PrismaClientKnownRequestError('Record to update not found.', {
+    code: 'P2025',
+    clientVersion: 'test',
+  });
 
-      await expect(service.update('missing', { price: 100 })).rejects.toThrow(NotFoundException);
-      expect(prisma.artwork.update).not.toHaveBeenCalled();
+  const fullBody = {
+    title: 'Sunset Over the Ocean',
+    artist: 'Claude Monet',
+    type: 'painting' as const,
+    price: 100,
+  };
+
+  describe('update', () => {
+    it('maps Prisma P2025 (record not found) to NotFoundException in a single query', async () => {
+      prisma.artwork.update.mockRejectedValue(recordNotFound);
+
+      await expect(service.update('missing', fullBody)).rejects.toThrow(NotFoundException);
+      expect(prisma.artwork.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('rethrows any other database error unchanged', async () => {
+      const dbDown = new Error('connection lost');
+      prisma.artwork.update.mockRejectedValue(dbDown);
+
+      await expect(service.update('id', fullBody)).rejects.toBe(dbDown);
     });
   });
 
   describe('remove', () => {
-    it('throws NotFoundException instead of calling delete when the artwork does not exist', async () => {
-      prisma.artwork.findUnique.mockResolvedValue(null);
+    it('maps Prisma P2025 (record not found) to NotFoundException in a single query', async () => {
+      prisma.artwork.delete.mockRejectedValue(recordNotFound);
 
       await expect(service.remove('missing')).rejects.toThrow(NotFoundException);
-      expect(prisma.artwork.delete).not.toHaveBeenCalled();
+      expect(prisma.artwork.findUnique).not.toHaveBeenCalled();
     });
   });
 });
