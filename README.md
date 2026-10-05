@@ -87,6 +87,7 @@ The task description leaves several things unspecified. Each was resolved delibe
 | 11 | Nothing about CORS/security | `helmet`, a CORS allowlist, and env validation at startup. Rate limiting listed under "What I'd add next" rather than added speculatively. |
 | 12 | Nothing about pagination | Not implemented — at 4–50 records it would add complexity without value; noted below instead of built speculatively. |
 | 13 | "Gallery admins" mentioned nowhere else, no auth requirement | Not implemented — out of scope for the brief. Noted below with where a guard would go if it were needed. |
+| 14 | The UI mockup shows one global "Remove Artwork" button under the grid, but the brief's own text says "each listing has a delete button" | Followed the text, not the mockup — the mockup's single button isn't wired to a specific artwork, so it can't actually delete one. Implemented per-card Edit/Delete buttons instead. |
 
 ## API contract
 
