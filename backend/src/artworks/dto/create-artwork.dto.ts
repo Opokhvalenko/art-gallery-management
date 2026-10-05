@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import {
   IsBoolean,
   IsIn,
@@ -16,14 +17,20 @@ import {
   type ArtworkType,
 } from '../../common/constants/artwork-types.constant';
 
+function trimString({ value }: { value: unknown }): unknown {
+  return typeof value === 'string' ? value.trim() : value;
+}
+
 export class CreateArtworkDto {
   @ApiProperty({ maxLength: ARTWORK_TITLE_MAX_LENGTH, example: 'Sunset Over the Ocean' })
+  @Transform(trimString)
   @IsString()
   @IsNotEmpty()
   @MaxLength(ARTWORK_TITLE_MAX_LENGTH)
   title!: string;
 
   @ApiProperty({ maxLength: ARTWORK_ARTIST_MAX_LENGTH, example: 'Claude Monet' })
+  @Transform(trimString)
   @IsString()
   @IsNotEmpty()
   @MaxLength(ARTWORK_ARTIST_MAX_LENGTH)

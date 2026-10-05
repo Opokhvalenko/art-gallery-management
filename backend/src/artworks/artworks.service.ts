@@ -13,12 +13,28 @@ export class ArtworksService {
   async findAll(query: QueryArtworkDto): Promise<ArtworkEntity[]> {
     const artworks = await this.prisma.artwork.findMany({
       where: {
-        artist: query.artist ? { contains: query.artist } : undefined,
         type: query.type,
       },
       orderBy: query.price ? { price: query.price } : undefined,
     });
-    return artworks.map((artwork) => this.toEntity(artwork));
+    const filtered = this.filterByArtist(artworks, query.artist);
+    return filtered.map((artwork) => this.toEntity(artwork));
+  }
+
+  /**
+   * SQLite has no `mode: 'insensitive'` support in Prisma, and SQLite's own
+   * `LIKE`/`LOWER()` only case-fold ASCII — both would silently fail to
+   * match e.g. "émile" against "Émile". Filtering in JS uses
+   * String.prototype.toLowerCase(), which is Unicode-aware. Fine at this
+   * dataset's scale (no pagination — see README); would move to a proper
+   * collation-aware query if this ever outgrew in-memory filtering.
+   */
+  private filterByArtist(artworks: Artwork[], artist?: string): Artwork[] {
+    if (!artist) {
+      return artworks;
+    }
+    const needle = artist.toLowerCase();
+    return artworks.filter((artwork) => artwork.artist.toLowerCase().includes(needle));
   }
 
   async findOne(id: string): Promise<ArtworkEntity> {

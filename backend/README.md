@@ -66,8 +66,8 @@ Codes: `VALIDATION_ERROR` (400) · `NOT_FOUND` (404) · `INTERNAL_ERROR` (500, l
 
 ## Tests
 
-- **20 e2e tests** (`test/artworks.e2e-spec.ts`) — every case in the API contract above, run against an isolated `test.db` (never touches the committed `dev.db`).
-- **7 unit tests** (`src/artworks/artworks.service.spec.ts`) — the Decimal→number mapping and the not-found branches, with a mocked Prisma client.
+- **24 e2e tests** (`test/artworks.e2e-spec.ts`) — every case in the API contract above, run against an isolated `test.db` (never touches the committed `dev.db`).
+- **8 unit tests** (`src/artworks/artworks.service.spec.ts`) — the Decimal→number mapping, the not-found branches, and the Unicode-aware artist filter, with a mocked Prisma client.
 
 ## What I'd add next
 

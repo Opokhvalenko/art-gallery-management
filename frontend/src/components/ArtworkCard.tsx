@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { useDeleteArtwork } from '../hooks/useArtworkMutations';
-import { getArtworkGradient, getArtworkInitials } from '../lib/artwork-placeholder';
+import {
+  getArtworkGradient,
+  getArtworkImage,
+  getArtworkInitials,
+} from '../lib/artwork-placeholder';
 import type { Artwork } from '../types/artwork';
 import { ConfirmDialog } from './ui/ConfirmDialog';
 
@@ -11,44 +15,64 @@ interface ArtworkCardProps {
 
 export function ArtworkCard({ artwork, onEdit }: ArtworkCardProps) {
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
   const deleteMutation = useDeleteArtwork();
+  const imageSrc = getArtworkImage(artwork.type, artwork.id);
 
   return (
-    <article className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md">
-      <div
-        className={`flex h-40 items-center justify-center bg-gradient-to-br text-3xl font-bold text-white ${getArtworkGradient(artwork.type)}`}
-      >
-        {getArtworkInitials(artwork.title)}
-      </div>
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="truncate font-semibold text-gray-900">{artwork.title}</h3>
-          <div className="flex shrink-0 gap-2 text-xs font-medium">
-            <button
-              type="button"
-              onClick={() => onEdit(artwork)}
-              className="text-gray-500 hover:text-gray-900"
-            >
-              Edit
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsConfirmingDelete(true)}
-              className="text-red-500 hover:text-red-700"
-            >
-              Delete
-            </button>
+    <article className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md">
+      <div className="relative aspect-video overflow-hidden bg-gray-100">
+        {imageSrc && !imageFailed ? (
+          <img
+            src={imageSrc}
+            alt={`Example ${artwork.type} artwork`}
+            className="h-full w-full object-contain"
+            onError={() => setImageFailed(true)}
+          />
+        ) : (
+          <div
+            className={`flex h-full items-center justify-center bg-gradient-to-br text-3xl font-bold text-white ${getArtworkGradient(artwork.type)}`}
+          >
+            {getArtworkInitials(artwork.title)}
           </div>
+        )}
+
+        <div className="absolute top-2 right-2 flex gap-1">
+          <button
+            type="button"
+            onClick={() => onEdit(artwork)}
+            aria-label={`Edit ${artwork.title}`}
+            className="rounded-full bg-white/90 px-2 py-1 text-xs font-medium text-gray-700 shadow-sm hover:bg-white"
+          >
+            Edit
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsConfirmingDelete(true)}
+            aria-label={`Delete ${artwork.title}`}
+            className="rounded-full bg-white/90 px-2 py-1 text-xs font-medium text-red-600 shadow-sm hover:bg-white"
+          >
+            Delete
+          </button>
         </div>
-        <p className="text-sm text-gray-500">By: {artwork.artist}</p>
-        <div className="mt-2 flex items-center justify-between">
-          <span className="font-medium text-gray-900">
+
+        <span
+          className={`absolute bottom-2 left-2 rounded-full px-2 py-1 text-xs font-medium shadow-sm ${
+            artwork.availability ? 'bg-white/90 text-green-700' : 'bg-white/90 text-gray-600'
+          }`}
+        >
+          {artwork.availability ? 'For sale' : 'Exhibition only'}
+        </span>
+      </div>
+
+      <div className="p-4">
+        <div className="flex items-baseline justify-between gap-2">
+          <h3 className="truncate font-semibold text-gray-900">{artwork.title}</h3>
+          <span className="shrink-0 font-bold text-gray-900">
             ${artwork.price.toLocaleString('en-US')}
           </span>
-          <span className={`text-xs ${artwork.availability ? 'text-green-600' : 'text-gray-400'}`}>
-            {artwork.availability ? 'For sale' : 'Exhibition only'}
-          </span>
         </div>
+        <p className="text-sm text-gray-500">By: {artwork.artist}</p>
       </div>
 
       {isConfirmingDelete && (
@@ -58,9 +82,7 @@ export function ArtworkCard({ artwork, onEdit }: ArtworkCardProps) {
           confirmLabel="Delete"
           isConfirming={deleteMutation.isPending}
           onCancel={() => setIsConfirmingDelete(false)}
-          onConfirm={() =>
-            deleteMutation.mutate(artwork.id, { onSuccess: () => setIsConfirmingDelete(false) })
-          }
+          onConfirm={() => deleteMutation.mutate(artwork.id)}
         />
       )}
     </article>

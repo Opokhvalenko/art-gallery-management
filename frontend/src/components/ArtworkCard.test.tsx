@@ -49,6 +49,6 @@ describe('ArtworkCard delete flow', () => {
     const dialog = screen.getByRole('dialog');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
 
-    expect(mutate).toHaveBeenCalledWith('1', expect.any(Object));
+    expect(mutate).toHaveBeenCalledWith('1');
   });
 });
