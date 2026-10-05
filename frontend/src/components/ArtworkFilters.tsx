@@ -19,7 +19,7 @@ export function ArtworkFilters({ filters, onChange }: ArtworkFiltersProps) {
 
   return (
     <div className="flex flex-wrap items-end gap-3">
-      <div className="flex flex-col gap-1">
+      <div className="flex min-w-[10rem] flex-1 flex-col gap-1 sm:max-w-xs sm:flex-none">
         <label htmlFor="artist-filter" className="text-xs font-medium text-gray-500">
           Artist
         </label>
@@ -29,7 +29,7 @@ export function ArtworkFilters({ filters, onChange }: ArtworkFiltersProps) {
           placeholder="Search by artist..."
           value={filters.artist}
           onChange={(event) => onChange({ ...filters, artist: event.target.value })}
-          className={`${SELECT_CLASSES} w-48`}
+          className={`${SELECT_CLASSES} w-full`}
         />
       </div>
 

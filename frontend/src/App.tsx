@@ -28,7 +28,7 @@ function App() {
     <div className="min-h-screen bg-gray-50">
       <Toaster richColors position="top-right" />
 
-      <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
+      <header className="flex flex-col gap-3 border-b border-gray-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">Art Gallery Manager</h1>
           <p className="text-sm text-gray-500">Explore Our Collection</p>
@@ -42,7 +42,7 @@ function App() {
         </button>
       </header>
 
-      <main className="p-6">
+      <main className="p-4 sm:p-6">
         <div className="mb-6">
           <ArtworkFilters filters={filters} onChange={setFilters} />
         </div>
