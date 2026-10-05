@@ -6,11 +6,11 @@ React 19 + TypeScript SPA for browsing, filtering, creating, editing and deletin
 
 ```bash
 npm install
-cp .env.example .env   # VITE_API_URL — defaults to http://localhost:3000
+cp .env.example .env   # VITE_API_URL; falls back to http://localhost:3000 if unset
 npm run dev
 ```
 
-The app boots on `http://localhost:5173`. The backend must be running (see `../backend/README.md`) — this app has no local-storage fallback; it talks to the real API.
+The app boots on `http://localhost:5173`. The backend must be running (see [`../backend/README.md`](../backend/README.md)) — the app talks to the real API, with no LocalStorage fallback. If the backend is unreachable, the list shows a clear error with a Retry button.
 
 ## Scripts
 
@@ -27,32 +27,33 @@ The app boots on `http://localhost:5173`. The backend must be running (see `../b
 
 | Choice | Why |
 |---|---|
-| **React 19 + Vite + TypeScript strict** | Strongest part of the author's stack (AdTell, Heartland Homes production experience). |
+| **React 19 + Vite + TypeScript strict** | Strongest part of my stack (AdTell, Heartland Homes production experience). |
 | **TanStack Query** | The 4 required states (loading/error/empty/success) come from `isPending`/`isError`/`data` out of the box, plus cache invalidation and optimistic updates for delete — without hand-rolled state machines. |
 | **React Hook Form + Zod** | One form component, two modes (create/edit); the Zod schema mirrors the backend DTO's validation rules exactly, so invalid input never reaches the API. |
 | **Tailwind CSS v4** | Zero-config via the Vite plugin — one `@import`, no `tailwind.config.js`. |
 | **sonner** | Lightweight toast notifications for mutation success/error feedback. |
 | **Headless UI** | Unstyled, accessible `Dialog` for the modal (add/edit form, delete confirmation) — focus trap, Escape-to-close, scroll lock, and an enter/exit transition, all from the library instead of a hand-rolled implementation. All visual styling is still Tailwind. |
-| **Vitest + Testing Library** | 16 tests across the critical paths — form validation, filters, all 4 list states, delete confirm flow, the artwork image hash (including a regression test for an id-collision bug found during review). Hooks are mocked rather than hitting a real `QueryClient`/network, keeping each test isolated to one component's behavior. |
+| **Vitest + Testing Library** | Component tests for the critical paths (breakdown below). Mutation hooks are mocked, so each test checks one component's behavior without a network. |
 | **No Redux** | Nothing here needs global client state beyond what TanStack Query's cache already provides — adding Redux would be unjustified complexity for this scope. |
 
 ## Features
 
 - **List + filters**: artist (debounced 350ms), type (predefined list), price sort (asc/desc), combinable
 - **4 data states**: skeleton grid while loading, error state with retry, empty state, success grid
-- **Create / edit**: one shared form (`ArtworkForm`), RHF + Zod validation, backend field errors (`ApiError.details`) mapped onto form fields as a second line of defense
+- **Create / edit**: one shared form (`ArtworkForm`), RHF + Zod validation (custom messages, no browser-native popups), backend field errors (`ApiError.details`) mapped onto form fields as a second line of defense
 - **Delete**: confirm dialog, optimistic removal from every active query variant with rollback on failure
-- **Responsive**: mobile-first grid and header, verified via code review against Tailwind's deterministic breakpoints (see root README's "What I'd add next" for the one tooling gap encountered here)
-- **Artwork imagery**: the model has no image field, so each card shows a full, uncropped (`object-contain`) public-domain image for its type — see the root README's decisions table for the full list and attribution
+- **Responsive**: mobile-first grid and header, checked at 375px — single-column grid, filters stack, header stays usable
+- **Artwork imagery**: the model has no image field, so the 4 seed artworks show their own public-domain image (matched by exact title, uncropped `object-contain`); any other artwork gets a gradient + initials — see the root README's decisions table for attribution
 
 ## Tests
 
-16 tests in 5 files (`npm run test`):
+21 tests in 6 files (`npm run test`):
 - `ArtworkFilters.test.tsx` — controlled inputs, Clear filters visibility and reset
 - `ArtworkList.test.tsx` — all 4 data states
-- `ArtworkForm.test.tsx` — Zod validation blocks submit, edit mode pre-fills, submit sends the correct payload
-- `ArtworkCard.test.tsx` — delete confirm dialog (cancel is a no-op, confirm calls the mutation)
-- `artwork-placeholder.test.ts` — the per-type image hash is deterministic and actually splits artworks of the same type across different images (a regression test for a real collision found in review — see below)
+- `ArtworkForm.test.tsx` — Zod validation blocks submit (incl. >2 decimal places in price), errors are linked to inputs via `aria-invalid`/`aria-describedby`, edit mode pre-fills, submit sends the correct payload
+- `ArtworkCard.test.tsx` — the type badge, delete confirm dialog (cancel is a no-op, confirm calls the mutation)
+- `artwork-placeholder.test.ts` — known titles resolve to their own image, and any other title falls back to the gradient
+- `http-client.test.ts` — an unreachable backend becomes a readable `NETWORK_ERROR`, while an aborted request still propagates as `AbortError`
 
 ## What I'd add next
 

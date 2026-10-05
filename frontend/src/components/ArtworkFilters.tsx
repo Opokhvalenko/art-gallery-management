@@ -11,6 +11,12 @@ interface ArtworkFiltersProps {
   onChange: (next: ArtworkFiltersState) => void;
 }
 
+const PRICE_SORT_VALUES: readonly ArtworkFiltersState['price'][] = ['', 'asc', 'desc'];
+
+function isPriceSort(value: string): value is ArtworkFiltersState['price'] {
+  return (PRICE_SORT_VALUES as readonly string[]).includes(value);
+}
+
 const SELECT_CLASSES =
   'rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-gray-400 focus:outline-none';
 
@@ -59,9 +65,12 @@ export function ArtworkFilters({ filters, onChange }: ArtworkFiltersProps) {
         <select
           id="price-sort"
           value={filters.price}
-          onChange={(event) =>
-            onChange({ ...filters, price: event.target.value as ArtworkFiltersState['price'] })
-          }
+          onChange={(event) => {
+            const { value } = event.target;
+            if (isPriceSort(value)) {
+              onChange({ ...filters, price: value });
+            }
+          }}
           className={SELECT_CLASSES}
         >
           <option value="">Default</option>

@@ -1,10 +1,9 @@
-import { type INestApplication, ValidationPipe } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { SEED_ARTWORKS } from '../prisma/seed-data';
 import { AppModule } from '../src/app.module';
-import { AllExceptionsFilter } from '../src/common/filters/http-exception.filter';
-import { validationExceptionFactory } from '../src/common/filters/validation-exception-factory';
+import { configureApp } from '../src/app.setup';
 import { PrismaService } from '../src/common/prisma/prisma.service';
 
 // DATABASE_URL/FRONTEND_URL are set in test/setup-e2e.ts (runs before this
@@ -21,15 +20,7 @@ describe('Artworks (e2e)', () => {
     }).compile();
 
     app = moduleRef.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-        exceptionFactory: validationExceptionFactory,
-      }),
-    );
-    app.useGlobalFilters(new AllExceptionsFilter());
+    configureApp(app);
     await app.init();
 
     prisma = moduleRef.get(PrismaService);
@@ -46,6 +37,12 @@ describe('Artworks (e2e)', () => {
   });
 
   describe('GET /artworks', () => {
+    it('sends security headers from helmet (same app setup as production)', async () => {
+      const res = await request(app.getHttpServer()).get('/artworks').expect(200);
+
+      expect(res.headers['x-content-type-options']).toBe('nosniff');
+    });
+
     it('returns the full list with price as a number, not a string', async () => {
       const res = await request(app.getHttpServer()).get('/artworks').expect(200);
 
@@ -53,6 +50,16 @@ describe('Artworks (e2e)', () => {
       for (const artwork of res.body) {
         expect(typeof artwork.price).toBe('number');
       }
+    });
+
+    it('defaults to newest-first when no sort is requested', async () => {
+      const created = await request(app.getHttpServer())
+        .post('/artworks')
+        .send({ title: 'Freshly Added', artist: 'A Reviewer', type: 'print', price: 1 })
+        .expect(201);
+
+      const res = await request(app.getHttpServer()).get('/artworks').expect(200);
+      expect(res.body[0].id).toBe(created.body.id);
     });
 
     it('sorts by price ascending', async () => {
@@ -73,8 +80,8 @@ describe('Artworks (e2e)', () => {
     });
 
     it('filters by artist case-insensitively', async () => {
-      const res = await request(app.getHttpServer()).get('/artworks?artist=maria').expect(200);
-      expect(res.body.every((a: { artist: string }) => a.artist === 'Maria Gonzales')).toBe(true);
+      const res = await request(app.getHttpServer()).get('/artworks?artist=vermeer').expect(200);
+      expect(res.body.every((a: { artist: string }) => a.artist === 'Johannes Vermeer')).toBe(true);
       expect(res.body.length).toBeGreaterThan(0);
     });
 
@@ -96,10 +103,10 @@ describe('Artworks (e2e)', () => {
 
     it('combines artist and type filters with AND', async () => {
       const res = await request(app.getHttpServer())
-        .get('/artworks?artist=liam&type=sculpture')
+        .get('/artworks?artist=degas&type=sculpture')
         .expect(200);
       expect(res.body).toHaveLength(1);
-      expect(res.body[0].title).toBe('Silent Observer');
+      expect(res.body[0].title).toBe('Little Dancer of Fourteen Years');
     });
   });
 
@@ -138,6 +145,24 @@ describe('Artworks (e2e)', () => {
         .send({ ...valid, price })
         .expect(400);
       expect(res.body.error.code).toBe('VALIDATION_ERROR');
+    });
+
+    it('accepts a price with 2 decimal places', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/artworks')
+        .send({ title: 'Small Sketch', artist: 'Jane Doe', type: 'print', price: 10.55 })
+        .expect(201);
+
+      expect(res.body.price).toBe(10.55);
+    });
+
+    it('rejects a price with more than 2 decimal places', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/artworks')
+        .send({ title: 'Small Sketch', artist: 'Jane Doe', type: 'print', price: 10.555 })
+        .expect(400);
+
+      expect(res.body.error.details[0].field).toBe('price');
     });
 
     it('rejects a title over 99 characters', async () => {
@@ -189,25 +214,57 @@ describe('Artworks (e2e)', () => {
   });
 
   describe('PUT /artworks/:id', () => {
-    it('updates only the fields sent, leaving the rest untouched', async () => {
+    const fullBody = {
+      title: 'Sunset Over the Ocean',
+      artist: 'Claude Monet',
+      type: 'painting',
+      price: 4500,
+      availability: false,
+    };
+
+    it('replaces the resource when the full body is sent', async () => {
+      const list = await request(app.getHttpServer()).get('/artworks');
+      const target = list.body[0];
+
+      const res = await request(app.getHttpServer())
+        .put(`/artworks/${target.id}`)
+        .send(fullBody)
+        .expect(200);
+
+      expect(res.body).toMatchObject(fullBody);
+    });
+
+    it('defaults availability to true when omitted, same as POST', async () => {
+      const list = await request(app.getHttpServer()).get('/artworks');
+      const target = list.body.find((a: { availability: boolean }) => a.availability === false);
+
+      const res = await request(app.getHttpServer())
+        .put(`/artworks/${target.id}`)
+        .send({
+          title: target.title,
+          artist: target.artist,
+          type: target.type,
+          price: target.price,
+        })
+        .expect(200);
+
+      expect(res.body.availability).toBe(true);
+    });
+
+    it('rejects a partial body with 400, same validation as POST', async () => {
       const list = await request(app.getHttpServer()).get('/artworks');
       const target = list.body[0];
 
       const res = await request(app.getHttpServer())
         .put(`/artworks/${target.id}`)
         .send({ price: 9999 })
-        .expect(200);
+        .expect(400);
 
-      expect(res.body.price).toBe(9999);
-      expect(res.body.title).toBe(target.title);
-      expect(res.body.artist).toBe(target.artist);
+      expect(res.body.error.code).toBe('VALIDATION_ERROR');
     });
 
     it('returns 404 for a missing id', async () => {
-      await request(app.getHttpServer())
-        .put('/artworks/does-not-exist')
-        .send({ price: 100 })
-        .expect(404);
+      await request(app.getHttpServer()).put('/artworks/does-not-exist').send(fullBody).expect(404);
     });
   });
 

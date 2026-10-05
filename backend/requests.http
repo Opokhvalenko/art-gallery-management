@@ -10,13 +10,13 @@ GET {{baseUrl}}/artworks?price=asc
 GET {{baseUrl}}/artworks?price=desc
 
 ### Filter by artist (case-insensitive, partial match)
-GET {{baseUrl}}/artworks?artist=liam
+GET {{baseUrl}}/artworks?artist=VAN
 
 ### Filter by type
 GET {{baseUrl}}/artworks?type=painting
 
 ### Combined filters + sort
-GET {{baseUrl}}/artworks?price=asc&artist=liam&type=sculpture
+GET {{baseUrl}}/artworks?price=asc&artist=degas&type=sculpture
 
 ### Invalid sort value -> 400
 GET {{baseUrl}}/artworks?price=sideways
@@ -61,7 +61,19 @@ Content-Type: application/json
   "price": -5
 }
 
-### Partial update (replace with a real id)
+### Full update — same body and validation as POST (replace with a real id)
+PUT {{baseUrl}}/artworks/REPLACE_WITH_ID
+Content-Type: application/json
+
+{
+  "title": "Sunset Over the Ocean",
+  "artist": "Claude Monet",
+  "type": "painting",
+  "price": 4500,
+  "availability": true
+}
+
+### Partial body on PUT -> 400 (same validation as POST)
 PUT {{baseUrl}}/artworks/REPLACE_WITH_ID
 Content-Type: application/json
 
@@ -74,7 +86,11 @@ PUT {{baseUrl}}/artworks/does-not-exist
 Content-Type: application/json
 
 {
-  "price": 100
+  "title": "Sunset Over the Ocean",
+  "artist": "Claude Monet",
+  "type": "painting",
+  "price": 100,
+  "availability": true
 }
 
 ### Delete an artwork (replace with a real id) -> 204

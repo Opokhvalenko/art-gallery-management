@@ -9,3 +9,6 @@ export type ArtworkType = (typeof ARTWORK_TYPES)[number];
 
 export const ARTWORK_TITLE_MAX_LENGTH = 99;
 export const ARTWORK_ARTIST_MAX_LENGTH = 50;
+
+/** Money is stored as Decimal; cents are the smallest unit we accept. */
+export const PRICE_MAX_DECIMAL_PLACES = 2;

@@ -21,8 +21,11 @@ function buildQueryString(params: ArtworkQueryParams): string {
   return query ? `?${query}` : '';
 }
 
-export function getArtworks(params: ArtworkQueryParams = {}): Promise<Artwork[]> {
-  return httpClient.get<Artwork[]>(`/artworks${buildQueryString(params)}`);
+export function getArtworks(
+  params: ArtworkQueryParams = {},
+  signal?: AbortSignal,
+): Promise<Artwork[]> {
+  return httpClient.get<Artwork[]>(`/artworks${buildQueryString(params)}`, signal);
 }
 
 export function getArtwork(id: string): Promise<Artwork> {

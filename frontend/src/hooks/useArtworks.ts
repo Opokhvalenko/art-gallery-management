@@ -1,4 +1,4 @@
-import { type UseQueryResult, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, type UseQueryResult, useQuery } from '@tanstack/react-query';
 import { getArtworks } from '../api/artworks';
 import type { Artwork, ArtworkQueryParams } from '../types/artwork';
 
@@ -7,6 +7,7 @@ export const artworksQueryKey = (params: ArtworkQueryParams) => ['artworks', par
 export function useArtworksQuery(params: ArtworkQueryParams): UseQueryResult<Artwork[], Error> {
   return useQuery({
     queryKey: artworksQueryKey(params),
-    queryFn: () => getArtworks(params),
+    queryFn: ({ signal }) => getArtworks(params, signal),
+    placeholderData: keepPreviousData,
   });
 }

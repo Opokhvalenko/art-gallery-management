@@ -1,10 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type { Artwork } from '@prisma/client';
+import { type Artwork, Prisma } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
 import type { CreateArtworkDto } from './dto/create-artwork.dto';
 import type { QueryArtworkDto } from './dto/query-artwork.dto';
-import type { UpdateArtworkDto } from './dto/update-artwork.dto';
 import type { ArtworkEntity } from './entities/artwork.entity';
+
+/** Prisma error code: the record targeted by update/delete does not exist. */
+const PRISMA_RECORD_NOT_FOUND = 'P2025';
 
 @Injectable()
 export class ArtworksService {
@@ -15,7 +17,7 @@ export class ArtworksService {
       where: {
         type: query.type,
       },
-      orderBy: query.price ? { price: query.price } : undefined,
+      orderBy: query.price ? { price: query.price } : { createdAt: 'desc' },
     });
     const filtered = this.filterByArtist(artworks, query.artist);
     return filtered.map((artwork) => this.toEntity(artwork));
@@ -47,21 +49,55 @@ export class ArtworksService {
     return this.toEntity(artwork);
   }
 
-  async update(id: string, dto: UpdateArtworkDto): Promise<ArtworkEntity> {
-    await this.findExistingOrThrow(id);
-    const artwork = await this.prisma.artwork.update({ where: { id }, data: dto });
-    return this.toEntity(artwork);
+  /**
+   * PUT replaces the resource, so an omitted `availability` must resolve
+   * the same way it would on create (default `true`) — Prisma's `update`
+   * only applies the column default on insert, not when a key is simply
+   * absent from `data`, so that default has to be applied explicitly here.
+   */
+  async update(id: string, dto: CreateArtworkDto): Promise<ArtworkEntity> {
+    try {
+      const artwork = await this.prisma.artwork.update({
+        where: { id },
+        data: { ...dto, availability: dto.availability ?? true },
+      });
+      return this.toEntity(artwork);
+    } catch (error: unknown) {
+      throw this.toNotFoundIfMissing(error, id);
+    }
   }
 
   async remove(id: string): Promise<void> {
-    await this.findExistingOrThrow(id);
-    await this.prisma.artwork.delete({ where: { id } });
+    try {
+      await this.prisma.artwork.delete({ where: { id } });
+    } catch (error: unknown) {
+      throw this.toNotFoundIfMissing(error, id);
+    }
+  }
+
+  /**
+   * update/delete hit the database once and let Prisma report a missing
+   * record (P2025) instead of a separate "does it exist?" read first — one
+   * query, and no window for the row to disappear between check and write.
+   */
+  private toNotFoundIfMissing(error: unknown, id: string): unknown {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === PRISMA_RECORD_NOT_FOUND
+    ) {
+      return this.notFound(id);
+    }
+    return error;
+  }
+
+  private notFound(id: string): NotFoundException {
+    return new NotFoundException(`Artwork with id "${id}" not found`);
   }
 
   private async findExistingOrThrow(id: string): Promise<Artwork> {
     const artwork = await this.prisma.artwork.findUnique({ where: { id } });
     if (!artwork) {
-      throw new NotFoundException(`Artwork with id "${id}" not found`);
+      throw this.notFound(id);
     }
     return artwork;
   }

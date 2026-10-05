@@ -2,24 +2,20 @@ import { describe, expect, it } from 'vitest';
 import { getArtworkImage, getArtworkInitials } from './artwork-placeholder';
 
 describe('getArtworkImage', () => {
-  it('is deterministic — the same id always returns the same image', () => {
-    const first = getArtworkImage('painting', 'cmuuytuna0000rt5oqkctnnd9');
-    const second = getArtworkImage('painting', 'cmuuytuna0000rt5oqkctnnd9');
-    expect(first).toBe(second);
+  it('returns a real image for a known seed title', () => {
+    expect(getArtworkImage('The Starry Night')).toBeDefined();
   });
 
-  it('gives two artworks of the same type different images — regression for the seed data collision', () => {
-    // These two real seed ids share a long common prefix (same createMany
-    // batch) and differ by one digit. A naive `(hash * 31 + c) % 997`
-    // rolling hash put both in the same bucket, so every "painting" card
-    // showed the same picture. FNV-1a must not repeat that.
-    const abstractVibrance = getArtworkImage('painting', 'cmuuytuna0000rt5oqkctnnd9');
-    const tranquilLake = getArtworkImage('painting', 'cmuuytuna0001rt5ookrlmnp7');
-    expect(abstractVibrance).not.toBe(tranquilLake);
+  it('gives two different seed titles different images', () => {
+    // A type-based lookup once showed the same picture for two different
+    // paintings — titles are an exact key, so that can't happen again.
+    const starryNight = getArtworkImage('The Starry Night');
+    const girlWithAPearlEarring = getArtworkImage('Girl with a Pearl Earring');
+    expect(starryNight).not.toBe(girlWithAPearlEarring);
   });
 
-  it('returns undefined for a type with no image pool', () => {
-    expect(getArtworkImage('unknown-type', 'some-id')).toBeUndefined();
+  it('returns undefined for any title outside the known 4, falling back to the gradient', () => {
+    expect(getArtworkImage('Sunset Over the Ocean')).toBeUndefined();
   });
 });
 

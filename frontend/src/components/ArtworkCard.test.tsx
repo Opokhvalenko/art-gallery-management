@@ -21,6 +21,17 @@ function mockDeleteMutation(mutate: ReturnType<typeof vi.fn>) {
   return { mutate, isPending: false } as unknown as ReturnType<typeof useDeleteArtwork>;
 }
 
+describe('ArtworkCard', () => {
+  it('shows the type on the card, as required by the brief', () => {
+    const mutate = vi.fn();
+    vi.mocked(useDeleteArtwork).mockReturnValue(mockDeleteMutation(mutate));
+
+    render(<ArtworkCard artwork={artwork} onEdit={vi.fn()} />);
+
+    expect(screen.getByText('painting')).toBeInTheDocument();
+  });
+});
+
 describe('ArtworkCard delete flow', () => {
   it('opens a confirm dialog naming the artwork, and cancel does nothing', () => {
     const mutate = vi.fn();

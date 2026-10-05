@@ -7,7 +7,7 @@ NestJS + Prisma + SQLite API for managing artwork listings in a virtual gallery.
 ```bash
 npm install
 cp .env.example .env
-npm run start:dev
+npm run dev
 ```
 
 The app boots on `http://localhost:3000`. No database setup needed — `prisma/dev.db` is committed with 4 seed artworks, so this is the only command required.
@@ -18,7 +18,7 @@ Swagger UI (interactive API docs): `http://localhost:3000/api/docs`
 
 | Command | What it does |
 |---|---|
-| `npm run start:dev` | Dev server with watch mode |
+| `npm run dev` | Dev server with watch mode |
 | `npm run build` | Production build (`dist/`) |
 | `npm run start:prod` | Run the production build |
 | `npm run typecheck` | `tsc --noEmit` |
@@ -32,9 +32,9 @@ Swagger UI (interactive API docs): `http://localhost:3000/api/docs`
 
 | Choice | Why |
 |---|---|
-| **NestJS 11** | Matches the task's first-listed framework option. Built-in DI, Pipes, Filters and `@nestjs/swagger` give a documented, validated API without hand-rolling middleware. Deliberately NOT NestJS 12 — its latest `@nestjs/common`/`@nestjs/config` builds are ESM-only and break the standard Jest + ts-jest setup; 11.x is the last fully CommonJS-compatible major. |
-| **SQLite** | The committed `dev.db` means `npm install && npm run start:dev` is the entire setup — no Postgres/Docker/cloud DB required to review this. |
-| **Prisma 6.x** | Not in the task's suggested ORM list (TypeORM/Mongoose/Sequelize), but ORM is marked optional there. Chosen for direct, recent production experience — and 6.x avoids the driver-adapter complexity that Prisma 7 introduces even for simple setups. |
+| **NestJS 11** | Matches the task's first-listed framework option. Built-in DI, Pipes, Filters and `@nestjs/swagger` give a documented, validated API without hand-rolling middleware. Current stable line I've used in production (Heartland Homes). |
+| **SQLite** | The committed `dev.db` means there's no database to install — no Postgres, Docker or cloud DB needed to review this. |
+| **Prisma 6** | Not in the brief's suggested ORM list, but the ORM itself is optional there. Chosen because I've used it in production; `Decimal` for `price`, mapped to a plain number in the service. |
 | **class-validator DTOs** | NestJS's idiomatic validation layer; combined with a global `ValidationPipe` and a custom `exceptionFactory`, every 400 response includes field-level detail, not just a flat message list. |
 
 ## API
@@ -46,10 +46,10 @@ Full contract with examples: `requests.http` (open with the VS Code REST Client 
 | GET | `/artworks` | List, optionally `?price=asc\|desc`, `?artist=`, `?type=` (combined with AND) |
 | GET | `/artworks/:id` | Single artwork, 404 if missing |
 | POST | `/artworks` | Create, validated (see below) |
-| PUT | `/artworks/:id` | Partial update, same validation, 404 if missing |
+| PUT | `/artworks/:id` | Full replace, same validation as POST (partial body → 400, omitted `availability` → `true`), 404 if missing |
 | DELETE | `/artworks/:id` | Remove, 204, 404 if missing |
 
-**Validation:** `title` required ≤99 chars · `artist` required ≤50 chars · `type` must be one of `painting, sculpture, photography, digital, print` (not specified in the task — this list is a documented choice) · `price` required, > 0 · `availability` optional, defaults to `true`.
+**Validation:** `title` required ≤99 chars · `artist` required ≤50 chars · `type` must be one of `painting, sculpture, photography, digital, print` (not specified in the task — this list is a documented choice) · `price` required, > 0, at most 2 decimal places · `availability` optional, defaults to `true`.
 
 **Error shape** (every error, from every source — validation, not-found, unmatched routes, unexpected failures):
 
@@ -66,12 +66,12 @@ Codes: `VALIDATION_ERROR` (400) · `NOT_FOUND` (404) · `INTERNAL_ERROR` (500, l
 
 ## Tests
 
-- **24 e2e tests** (`test/artworks.e2e-spec.ts`) — every case in the API contract above, run against an isolated `test.db` (never touches the committed `dev.db`).
-- **8 unit tests** (`src/artworks/artworks.service.spec.ts`) — the Decimal→number mapping, the not-found branches, and the Unicode-aware artist filter, with a mocked Prisma client.
+- **30 e2e tests** (`test/artworks.e2e-spec.ts`) — the API contract above, run against an isolated `test.db` (never touches the committed `dev.db`). The test app is built with the same `configureApp()` as `main.ts` (validation, error filter, helmet, CORS), so tests exercise the production pipeline.
+- **9 unit tests** (`src/artworks/artworks.service.spec.ts`) — the Decimal→number mapping, Prisma `P2025` → 404 mapping (update/delete run as a single query, no separate existence check), and the Unicode-aware artist filter, with a mocked Prisma client.
 
 ## What I'd add next
 
 - Pagination — not worth the complexity at 4–50 records; would reconsider past a few hundred.
-- Authentication / role-based access for "gallery admins" — out of scope for the task, but `common/filters` and a `common/guards` folder would be the natural place for a `JwtAuthGuard`.
+- Authentication / role-based access for "gallery admins" — out of scope for the task; a `JwtAuthGuard` would live in a new `common/guards` folder.
 - Rate limiting (`@nestjs/throttler`) — cheap to add, skipped to stay within scope.
-- Image upload — the task's `Artwork` model has no image field, so the frontend renders a deterministic placeholder instead of extending the contract.
+- Image upload — the task's `Artwork` model has no image field, so the model wasn't extended; the frontend shows images only for the 4 seed works and a gradient for the rest.
