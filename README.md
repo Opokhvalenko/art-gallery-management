@@ -115,7 +115,7 @@ PUT    /artworks/:id                                       → 200 Artwork | 400
 DELETE /artworks/:id                                       → 204 | 404
 ```
 
-Interactive docs: `/api/docs` (Swagger). Full request/response examples: [`backend/requests.http`](backend/requests.http).
+Interactive docs: `/api/docs` (Swagger) — every operation documents its success response and its 400/404 errors with the unified error schema and realistic examples; raw OpenAPI JSON at `/api/docs-json`. Full request/response examples: [`backend/requests.http`](backend/requests.http).
 
 **Validation:** `title` required, ≤99 chars · `artist` required, ≤50 chars · `type` one of the predefined list · `price` required, > 0, at most 2 decimal places · `availability` optional, defaults to `true`.
 
@@ -133,7 +133,7 @@ Interactive docs: `/api/docs` (Swagger). Full request/response examples: [`backe
 
 ## Tests
 
-- **Backend — 39 tests**: 30 e2e against an isolated SQLite database (`backend/test/artworks.e2e-spec.ts` — sorting and filters, validation edge cases such as whitespace-only input and a 99-character title, non-ASCII artist names, price precision, PUT replace semantics, 404s, Decimal→number, security headers) + 9 unit (`backend/src/artworks/artworks.service.spec.ts`).
+- **Backend — 41 tests**: 32 e2e against an isolated SQLite database (`backend/test/artworks.e2e-spec.ts` — sorting and filters, validation edge cases such as whitespace-only input and a 99-character title, non-ASCII artist names, price precision, PUT replace semantics, 404s, Decimal→number, security headers, documented error responses in the OpenAPI spec) + 9 unit (`backend/src/artworks/artworks.service.spec.ts`).
 - **Frontend — 21 tests** (Vitest + Testing Library): form validation and accessible error messages, the edit flow, filters, all 4 list states, the delete confirm dialog, the type badge, the artwork image lookup, network-error handling. See [`frontend/README.md`](frontend/README.md#tests) for the breakdown.
 - **CI**: `.github/workflows/ci.yml` runs typecheck, lint, build and the full test suite for both packages on every push and PR.
 

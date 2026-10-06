@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { ARTWORK_TYPES } from '../../common/constants/artwork-types.constant';
 
 /**
  * API response shape. `price` is a plain number here — Prisma returns it as
@@ -15,7 +16,7 @@ export class ArtworkEntity {
   @ApiProperty({ example: 'Claude Monet' })
   artist!: string;
 
-  @ApiProperty({ example: 'painting' })
+  @ApiProperty({ enum: ARTWORK_TYPES, example: 'painting' })
   type!: string;
 
   @ApiProperty({ example: 4500 })
