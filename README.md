@@ -2,6 +2,10 @@
 
 A small virtual gallery manager: browse, filter, sort, create, edit and delete artworks. Built for the Techstack Trainee Full-Stack JS test task — both the frontend (React SPA) and backend (NestJS API) are implemented, with the backend as the frontend's real data source (no LocalStorage fallback).
 
+**Live demo:** [app](https://art-gallery-management-eight.vercel.app) · [API](https://art-gallery-backend-6apv.onrender.com/artworks) · [Swagger](https://art-gallery-backend-6apv.onrender.com/api/docs)
+
+> The API runs on Render's free plan: after ~15 minutes idle the first request can take up to a minute while it wakes up, and data written to the live demo resets to the 4 seed artworks on restart (see [What I'd add next](#what-id-add-next)).
+
 Setup is three commands per folder, no database or Docker needed — see [How to run locally](#how-to-run-locally).
 
 ![Artwork list with filters, sort, and per-card Edit/Delete actions](docs/screenshots/gallery-list.jpg)
