@@ -1,5 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsIn, IsOptional, IsString } from 'class-validator';
+import { ARTWORK_TYPES } from '../../common/constants/artwork-types.constant';
 
 export class QueryArtworkDto {
   @ApiPropertyOptional({
@@ -16,7 +17,10 @@ export class QueryArtworkDto {
   @IsString()
   artist?: string;
 
-  @ApiPropertyOptional({ description: 'Filter by artwork type (exact match)' })
+  @ApiPropertyOptional({
+    enum: ARTWORK_TYPES,
+    description: 'Filter by artwork type (exact match; an unknown type returns an empty list)',
+  })
   @IsOptional()
   @IsString()
   type?: string;

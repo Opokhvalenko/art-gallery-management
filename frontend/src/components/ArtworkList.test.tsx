@@ -1,5 +1,5 @@
 import type { UseQueryResult } from '@tanstack/react-query';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { useDeleteArtwork } from '../hooks/useArtworkMutations';
 import { useArtworksQuery } from '../hooks/useArtworks';
@@ -43,6 +43,22 @@ describe('ArtworkList', () => {
     expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
   });
 
+  it('explains a slow first load (sleeping free-tier API) instead of only showing skeletons', () => {
+    vi.useFakeTimers();
+    mockedUseArtworksQuery.mockReturnValue(
+      mockQueryResult({ isPending: true, isError: false, data: undefined, refetch: vi.fn() }),
+    );
+
+    render(<ArtworkList queryParams={{}} onEdit={vi.fn()} />);
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(4000);
+    });
+    expect(screen.getByRole('status')).toHaveTextContent(/waking up the server/i);
+    vi.useRealTimers();
+  });
+
   it('shows the error state with the message and a working retry button', () => {
     const refetch = vi.fn();
     mockedUseArtworksQuery.mockReturnValue(
@@ -67,9 +83,19 @@ describe('ArtworkList', () => {
       mockQueryResult({ isPending: false, isError: false, data: [], refetch: vi.fn() }),
     );
 
-    render(<ArtworkList queryParams={{}} onEdit={vi.fn()} />);
+    render(<ArtworkList queryParams={{ type: 'sculpture' }} onEdit={vi.fn()} />);
 
     expect(screen.getByText(/no artworks match your filters/i)).toBeInTheDocument();
+  });
+
+  it('invites adding the first artwork when the collection itself is empty', () => {
+    mockedUseArtworksQuery.mockReturnValue(
+      mockQueryResult({ isPending: false, isError: false, data: [], refetch: vi.fn() }),
+    );
+
+    render(<ArtworkList queryParams={{}} onEdit={vi.fn()} />);
+
+    expect(screen.getByText(/collection is empty/i)).toBeInTheDocument();
   });
 
   it('renders a card per artwork on success', () => {

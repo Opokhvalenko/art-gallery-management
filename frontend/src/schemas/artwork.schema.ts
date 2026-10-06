@@ -4,6 +4,7 @@ import {
   ARTWORK_ARTIST_MAX_LENGTH,
   ARTWORK_TITLE_MAX_LENGTH,
   ARTWORK_TYPES,
+  PRICE_MAX,
   PRICE_MAX_DECIMAL_PLACES,
 } from '../constants/artwork';
 
@@ -30,6 +31,7 @@ export const artworkFormSchema = z.object({
     z.coerce
       .number({ message: 'Price is required' })
       .positive('Price must be greater than 0')
+      .max(PRICE_MAX, `Price must be at most ${PRICE_MAX.toLocaleString('en-US')}`)
       .multipleOf(PRICE_STEP, `Price can have at most ${PRICE_MAX_DECIMAL_PLACES} decimal places`),
   ),
   availability: z.boolean(),

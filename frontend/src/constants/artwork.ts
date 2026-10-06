@@ -12,3 +12,6 @@ export const ARTWORK_ARTIST_MAX_LENGTH = 50;
 
 /** Mirrors the backend rule: cents are the smallest accepted unit. */
 export const PRICE_MAX_DECIMAL_PLACES = 2;
+
+/** Mirrors the backend's upper bound on price. */
+export const PRICE_MAX = 1_000_000_000;

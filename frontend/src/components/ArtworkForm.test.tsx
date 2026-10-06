@@ -67,6 +67,21 @@ describe('ArtworkForm', () => {
     expect(createMutate).not.toHaveBeenCalled();
   });
 
+  it('rejects a price above the maximum', async () => {
+    const createMutate = vi.fn();
+    vi.mocked(useCreateArtwork).mockReturnValue(mockCreateMutation(createMutate));
+    vi.mocked(useUpdateArtwork).mockReturnValue(mockUpdateMutation(vi.fn()));
+
+    render(<ArtworkForm mode="create" onClose={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Small Sketch' } });
+    fireEvent.change(screen.getByLabelText('Artist'), { target: { value: 'Jane Doe' } });
+    fireEvent.change(screen.getByLabelText('Price'), { target: { value: '1000000000.01' } });
+    fireEvent.click(screen.getByRole('button', { name: /add artwork/i }));
+
+    expect(await screen.findByText('Price must be at most 1,000,000,000')).toBeInTheDocument();
+    expect(createMutate).not.toHaveBeenCalled();
+  });
+
   it('pre-fills every field in edit mode', () => {
     vi.mocked(useCreateArtwork).mockReturnValue(mockCreateMutation(vi.fn()));
     vi.mocked(useUpdateArtwork).mockReturnValue(mockUpdateMutation(vi.fn()));

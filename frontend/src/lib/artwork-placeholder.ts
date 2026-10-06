@@ -1,7 +1,7 @@
-import digitalImg from '../assets/artwork-types/digital.webp';
-import paintingImg from '../assets/artwork-types/painting.webp';
-import paintingImg2 from '../assets/artwork-types/painting2.webp';
-import sculptureImg from '../assets/artwork-types/sculpture.webp';
+import girlWithAPearlEarringImg from '../assets/artworks/girl-with-a-pearl-earring.webp';
+import littleDancerImg from '../assets/artworks/little-dancer.webp';
+import pillarsOfCreationImg from '../assets/artworks/pillars-of-creation.webp';
+import starryNightImg from '../assets/artworks/starry-night.webp';
 
 /**
  * The Artwork model has no image field (see README decisions — not in the
@@ -13,10 +13,10 @@ import sculptureImg from '../assets/artwork-types/sculpture.webp';
  * load. Attribution in README.
  */
 const KNOWN_ARTWORK_IMAGES: Record<string, string> = {
-  'The Starry Night': paintingImg,
-  'Girl with a Pearl Earring': paintingImg2,
-  'Pillars of Creation': digitalImg,
-  'Little Dancer of Fourteen Years': sculptureImg,
+  'The Starry Night': starryNightImg,
+  'Girl with a Pearl Earring': girlWithAPearlEarringImg,
+  'Pillars of Creation': pillarsOfCreationImg,
+  'Little Dancer of Fourteen Years': littleDancerImg,
 };
 
 export function getArtworkImage(title: string): string | undefined {

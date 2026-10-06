@@ -8,6 +8,7 @@ import {
   IsOptional,
   IsPositive,
   IsString,
+  Max,
   MaxLength,
 } from 'class-validator';
 import {
@@ -15,6 +16,7 @@ import {
   ARTWORK_TITLE_MAX_LENGTH,
   ARTWORK_TYPES,
   type ArtworkType,
+  PRICE_MAX,
   PRICE_MAX_DECIMAL_PLACES,
 } from '../../common/constants/artwork-types.constant';
 
@@ -49,14 +51,16 @@ export class CreateArtworkDto {
     example: 4500,
     minimum: 0,
     exclusiveMinimum: true,
+    maximum: PRICE_MAX,
     multipleOf: 0.01,
-    description: 'Must be greater than 0, at most 2 decimal places',
+    description: `Must be greater than 0 and at most ${PRICE_MAX}, with at most 2 decimal places`,
   })
   @IsNumber(
     { maxDecimalPlaces: PRICE_MAX_DECIMAL_PLACES },
     { message: `price must be a number with at most ${PRICE_MAX_DECIMAL_PLACES} decimal places` },
   )
   @IsPositive()
+  @Max(PRICE_MAX)
   price!: number;
 
   @ApiPropertyOptional({ default: true, description: 'Defaults to true (for sale) when omitted' })
