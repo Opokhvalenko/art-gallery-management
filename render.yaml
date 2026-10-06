@@ -4,13 +4,17 @@ services:
     runtime: node
     plan: free
     rootDir: backend
-    buildCommand: npm install && npm run build
+    # --include=dev: NODE_ENV=production would otherwise skip devDependencies,
+    # and the build needs @nestjs/cli (`nest build`) and the prisma CLI.
+    buildCommand: npm ci --include=dev && npm run build
     startCommand: npm run start:prod
     healthCheckPath: /artworks
     envVars:
       - key: NODE_ENV
         value: production
+      - key: NODE_VERSION
+        value: "22"
       - key: DATABASE_URL
         value: file:./dev.db
       - key: FRONTEND_URL
-        sync: false # set to the deployed Vercel URL once the frontend is live
+        value: https://art-gallery-management-eight.vercel.app # CORS allowlist; comma-separate to add more origins
