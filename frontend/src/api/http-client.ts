@@ -35,7 +35,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
       ...init,
-      headers: { 'Content-Type': 'application/json', ...init?.headers },
+      // Only requests with a JSON body need Content-Type — on a bodiless GET
+      // or DELETE it would turn a simple CORS request into a preflighted one.
+      headers: init?.body ? { 'Content-Type': 'application/json', ...init.headers } : init?.headers,
     });
   } catch (error: unknown) {
     // Cancellation (TanStack Query's `signal`) must propagate unchanged.

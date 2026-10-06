@@ -1,4 +1,5 @@
 import { ARTWORK_TYPES } from '../constants/artwork';
+import { formatArtworkType } from '../lib/format';
 
 export interface ArtworkFiltersState {
   artist: string;
@@ -52,7 +53,7 @@ export function ArtworkFilters({ filters, onChange }: ArtworkFiltersProps) {
           <option value="">All types</option>
           {ARTWORK_TYPES.map((type) => (
             <option key={type} value={type}>
-              {type}
+              {formatArtworkType(type)}
             </option>
           ))}
         </select>

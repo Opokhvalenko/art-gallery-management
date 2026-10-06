@@ -4,6 +4,7 @@ import request from 'supertest';
 import { SEED_ARTWORKS } from '../prisma/seed-data';
 import { AppModule } from '../src/app.module';
 import { configureApp, createSwaggerDocument } from '../src/app.setup';
+import { PRICE_MAX } from '../src/common/constants/artwork-types.constant';
 import { PrismaService } from '../src/common/prisma/prisma.service';
 
 // DATABASE_URL/FRONTEND_URL are set in test/setup-e2e.ts (runs before this
@@ -139,7 +140,7 @@ describe('Artworks (e2e)', () => {
       expect(res.body.price).toBe(4500);
     });
 
-    it.each([0, -5, 'abc'])('rejects price=%p with 400', async (price) => {
+    it.each([0, -5, 'abc', PRICE_MAX + 1, 1e300])('rejects price=%p with 400', async (price) => {
       const res = await request(app.getHttpServer())
         .post('/artworks')
         .send({ ...valid, price })
@@ -154,6 +155,15 @@ describe('Artworks (e2e)', () => {
         .expect(201);
 
       expect(res.body.price).toBe(10.55);
+    });
+
+    it('accepts the maximum price exactly', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/artworks')
+        .send({ title: 'Masterpiece', artist: 'Jane Doe', type: 'painting', price: PRICE_MAX })
+        .expect(201);
+
+      expect(res.body.price).toBe(PRICE_MAX);
     });
 
     it('rejects a price with more than 2 decimal places', async () => {

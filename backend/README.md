@@ -49,7 +49,7 @@ Full contract with examples: `requests.http` (open with the VS Code REST Client 
 | PUT | `/artworks/:id` | Full replace, same validation as POST (partial body → 400, omitted `availability` → `true`), 404 if missing |
 | DELETE | `/artworks/:id` | Remove, 204, 404 if missing |
 
-**Validation:** `title` required ≤99 chars · `artist` required ≤50 chars · `type` must be one of `painting, sculpture, photography, digital, print` (not specified in the task — this list is a documented choice) · `price` required, > 0, at most 2 decimal places · `availability` optional, defaults to `true`.
+**Validation:** `title` required ≤99 chars · `artist` required ≤50 chars · `type` must be one of `painting, sculpture, photography, digital, print` (not specified in the task — this list is a documented choice) · `price` required, > 0, ≤ 1,000,000,000, at most 2 decimal places · `availability` optional, defaults to `true`.
 
 **Error shape** (every error, from every source — validation, not-found, unmatched routes, unexpected failures):
 
@@ -66,7 +66,7 @@ Codes: `VALIDATION_ERROR` (400) · `NOT_FOUND` (404) · `INTERNAL_ERROR` (500, l
 
 ## Tests
 
-- **32 e2e tests** (`test/artworks.e2e-spec.ts`) — the API contract above (plus checks that the OpenAPI document references the error schema for every 400/404), run against an isolated `test.db` (never touches the committed `dev.db`). The test app is built with the same `configureApp()` as `main.ts` (validation, error filter, helmet, CORS), so tests exercise the production pipeline.
+- **35 e2e tests** (`test/artworks.e2e-spec.ts`) — the API contract above (plus checks that the OpenAPI document references the error schema for every 400/404), run against an isolated `test.db` (never touches the committed `dev.db`). The test app is built with the same `configureApp()` as `main.ts` (validation, error filter, helmet, CORS), so tests exercise the production pipeline.
 - **9 unit tests** (`src/artworks/artworks.service.spec.ts`) — the Decimal→number mapping, Prisma `P2025` → 404 mapping (update/delete run as a single query, no separate existence check), and the Unicode-aware artist filter, with a mocked Prisma client.
 
 ## What I'd add next

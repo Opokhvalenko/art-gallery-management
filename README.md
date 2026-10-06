@@ -31,7 +31,7 @@ Setup is three commands per folder, no database or Docker needed — see [How to
 | List view (title, artist, type, price, availability) | ✅ |
 | Sort by price (asc/desc) | ✅ |
 | Filter by artist + type | ✅ |
-| Add form: title/artist required, type from predefined list, price > 0 (max 2 decimals), availability boolean | ✅ |
+| Add form: title/artist required, type from predefined list, price > 0 and ≤ 1,000,000,000 (max 2 decimals), availability boolean | ✅ |
 | Delete button per card | ✅ |
 | Persistence across reload (via the real API, not LocalStorage) | ✅ |
 | Edit — not required by the brief | ✅ implemented anyway, same form as create |
@@ -95,7 +95,7 @@ The brief leaves several things open. Each choice below was made deliberately.
 | 4 | `artist` max length (50) is only stated in the backend requirements, not the frontend's | Applied on both sides — one Zod schema on the frontend mirrors the backend DTO. |
 | 5 | "Predefined types" — no list given | Defined one: `painting`, `sculpture`, `photography`, `digital`, `print`, shared as one constant on both frontend and backend. The backend returns 400 on an unknown type. |
 | 6 | `availability` is required on the frontend form but optional on the backend | Backend: optional, defaults to `true`. Frontend: the checkbox always sends an explicit boolean. |
-| 7 | `price: number` is money | Modeled as Prisma `Decimal`, not `Float`, to avoid floating-point rounding on currency, and limited to 2 decimal places (cents) on both frontend and backend. Decimal serializes to JSON as a string by default — the service layer explicitly calls `.toNumber()` so the frontend always receives a real number, not `"4500"`. |
+| 7 | `price: number` is money | Modeled as Prisma `Decimal`, not `Float`, to avoid floating-point rounding on currency, limited to 2 decimal places (cents), and capped at 1,000,000,000 on both frontend and backend — without a cap, e.g. `1e300` was accepted and prices past ~9×10¹⁵ silently lost their cents as a JS number. Decimal serializes to JSON as a string by default — the service layer explicitly calls `.toNumber()` so the frontend always receives a real number, not `"4500"`. |
 | 8 | Sort query format | Implemented exactly as the brief shows it — `?price=asc`, not `?sort=price&order=asc`. |
 | 9 | Artist filter — exact match or partial? | Case-insensitive, partial match. Neither Prisma's `mode: 'insensitive'` nor SQLite's own `LIKE`/`LOWER()` case-fold beyond ASCII, so the filter is applied in JS (`String.prototype.toLowerCase()`, which is Unicode-aware) after the query, not pushed into SQL — verified with a real non-ASCII name (`"Émile Zola"`), not just an uppercase/lowercase ASCII check. |
 | 10 | Error codes aren't specified | 400 for validation, 404 for a missing id on GET/PUT/DELETE, 500 for anything else — all through one global exception filter with a single response shape (see [API contract](#api-contract)). |
@@ -117,7 +117,7 @@ DELETE /artworks/:id                                       → 204 | 404
 
 Interactive docs: `/api/docs` (Swagger) — every operation documents its success response and its 400/404 errors with the unified error schema and realistic examples; raw OpenAPI JSON at `/api/docs-json`. Full request/response examples: [`backend/requests.http`](backend/requests.http).
 
-**Validation:** `title` required, ≤99 chars · `artist` required, ≤50 chars · `type` one of the predefined list · `price` required, > 0, at most 2 decimal places · `availability` optional, defaults to `true`.
+**Validation:** `title` required, ≤99 chars · `artist` required, ≤50 chars · `type` one of the predefined list · `price` required, > 0, ≤ 1,000,000,000, at most 2 decimal places · `availability` optional, defaults to `true`.
 
 **Error shape** — the same for validation errors, 404s, unknown routes and unexpected failures:
 
@@ -133,8 +133,8 @@ Interactive docs: `/api/docs` (Swagger) — every operation documents its succes
 
 ## Tests
 
-- **Backend — 41 tests**: 32 e2e against an isolated SQLite database (`backend/test/artworks.e2e-spec.ts` — sorting and filters, validation edge cases such as whitespace-only input and a 99-character title, non-ASCII artist names, price precision, PUT replace semantics, 404s, Decimal→number, security headers, documented error responses in the OpenAPI spec) + 9 unit (`backend/src/artworks/artworks.service.spec.ts`).
-- **Frontend — 21 tests** (Vitest + Testing Library): form validation and accessible error messages, the edit flow, filters, all 4 list states, the delete confirm dialog, the type badge, the artwork image lookup, network-error handling. See [`frontend/README.md`](frontend/README.md#tests) for the breakdown.
+- **Backend — 44 tests**: 35 e2e against an isolated SQLite database (`backend/test/artworks.e2e-spec.ts` — sorting and filters, validation edge cases such as whitespace-only input and a 99-character title, non-ASCII artist names, price precision and upper bound, PUT replace semantics, 404s, Decimal→number, security headers, documented error responses in the OpenAPI spec) + 9 unit (`backend/src/artworks/artworks.service.spec.ts`).
+- **Frontend — 28 tests** (Vitest + Testing Library): form validation and accessible error messages, the edit flow, filters, all 4 list states plus the slow-first-load hint, the delete confirm dialog, the type badge, the artwork image lookup, price formatting, network-error handling. See [`frontend/README.md`](frontend/README.md#tests) for the breakdown.
 - **CI**: `.github/workflows/ci.yml` runs typecheck, lint, build and the full test suite for both packages on every push and PR.
 
 ## What I'd add next

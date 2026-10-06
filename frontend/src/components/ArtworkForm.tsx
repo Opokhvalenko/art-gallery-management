@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { ApiError } from '../api/http-client';
 import { ARTWORK_TYPES } from '../constants/artwork';
 import { useCreateArtwork, useUpdateArtwork } from '../hooks/useArtworkMutations';
+import { formatArtworkType } from '../lib/format';
 import {
   type ArtworkFormInput,
   type ArtworkFormValues,
@@ -134,7 +135,7 @@ export function ArtworkForm(props: ArtworkFormProps) {
         >
           {ARTWORK_TYPES.map((type) => (
             <option key={type} value={type}>
-              {type}
+              {formatArtworkType(type)}
             </option>
           ))}
         </select>

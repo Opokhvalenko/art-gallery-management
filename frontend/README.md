@@ -44,16 +44,18 @@ The app boots on `http://localhost:5173`. The backend must be running (see [`../
 - **Delete**: confirm dialog, optimistic removal from every active query variant with rollback on failure
 - **Responsive**: mobile-first grid and header, checked at 375px — single-column grid, filters stack, header stays usable
 - **Artwork imagery**: the model has no image field, so the 4 seed artworks show their own public-domain image (matched by exact title, uncropped `object-contain`); any other artwork gets a gradient + initials — see the root README's decisions table for attribution
+- **Slow first load**: the live API sleeps on Render's free plan, so if the first load takes more than 4 seconds the skeletons get a "waking up the server" note instead of looking frozen
 
 ## Tests
 
-21 tests in 6 files (`npm run test`):
+28 tests in 7 files (`npm run test`):
 - `ArtworkFilters.test.tsx` — controlled inputs, Clear filters visibility and reset
-- `ArtworkList.test.tsx` — all 4 data states
-- `ArtworkForm.test.tsx` — Zod validation blocks submit (incl. >2 decimal places in price), errors are linked to inputs via `aria-invalid`/`aria-describedby`, edit mode pre-fills, submit sends the correct payload
+- `ArtworkList.test.tsx` — all 4 data states (empty state worded differently with and without active filters), plus the "waking up the server" hint after a slow first load
+- `ArtworkForm.test.tsx` — Zod validation blocks submit (incl. >2 decimal places and the 1,000,000,000 cap in price), errors are linked to inputs via `aria-invalid`/`aria-describedby`, edit mode pre-fills, submit sends the correct payload
 - `ArtworkCard.test.tsx` — the type badge, delete confirm dialog (cancel is a no-op, confirm calls the mutation)
 - `artwork-placeholder.test.ts` — known titles resolve to their own image, and any other title falls back to the gradient
-- `http-client.test.ts` — an unreachable backend becomes a readable `NETWORK_ERROR`, while an aborted request still propagates as `AbortError`
+- `http-client.test.ts` — an unreachable backend becomes a readable `NETWORK_ERROR`, an aborted request still propagates as `AbortError`, and `Content-Type` is only sent with a body (so GETs don't trigger a CORS preflight)
+- `format.test.ts` — prices show cents only when there are any (`$5,500`, `$19.90`), type labels are capitalized
 
 ## What I'd add next
 

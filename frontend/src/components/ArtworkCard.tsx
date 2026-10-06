@@ -5,6 +5,7 @@ import {
   getArtworkImage,
   getArtworkInitials,
 } from '../lib/artwork-placeholder';
+import { formatPrice } from '../lib/format';
 import type { Artwork } from '../types/artwork';
 import { ConfirmDialog } from './ui/ConfirmDialog';
 
@@ -40,10 +41,10 @@ export function ArtworkCard({ artwork, onEdit }: ArtworkCardProps) {
 
       <div className="p-4">
         <div className="flex items-baseline justify-between gap-2">
-          <h3 className="truncate font-semibold text-gray-900">{artwork.title}</h3>
-          <span className="shrink-0 font-bold text-gray-900">
-            ${artwork.price.toLocaleString('en-US')}
-          </span>
+          <h2 className="truncate font-semibold text-gray-900" title={artwork.title}>
+            {artwork.title}
+          </h2>
+          <span className="shrink-0 font-bold text-gray-900">{formatPrice(artwork.price)}</span>
         </div>
         <p className="text-sm text-gray-500">
           <span className="capitalize">{artwork.type}</span> · By: {artwork.artist}
