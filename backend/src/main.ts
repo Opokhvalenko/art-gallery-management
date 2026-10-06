@@ -6,6 +6,9 @@ import type { Env } from './config/env.validation';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
+  // Run onModuleDestroy hooks (PrismaService.$disconnect) on SIGTERM/SIGINT,
+  // e.g. when the host stops or redeploys the instance.
+  app.enableShutdownHooks();
 
   configureApp(app);
   setupSwagger(app);

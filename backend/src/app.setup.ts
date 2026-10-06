@@ -1,6 +1,6 @@
 import { type INestApplication, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { DocumentBuilder, type OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { validationExceptionFactory } from './common/filters/validation-exception-factory';
@@ -35,12 +35,16 @@ export function configureApp(app: INestApplication): void {
   app.useGlobalFilters(new AllExceptionsFilter());
 }
 
-export function setupSwagger(app: INestApplication): void {
+/** Builds the OpenAPI document — separate from setup so tests can inspect it. */
+export function createSwaggerDocument(app: INestApplication): OpenAPIObject {
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Art Gallery Management API')
     .setDescription('CRUD API for managing artwork listings in a virtual gallery')
     .setVersion('1.0')
     .build();
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, document);
+  return SwaggerModule.createDocument(app, swaggerConfig);
+}
+
+export function setupSwagger(app: INestApplication): void {
+  SwaggerModule.setup('api/docs', app, createSwaggerDocument(app));
 }

@@ -28,10 +28,6 @@ export function getArtworks(
   return httpClient.get<Artwork[]>(`/artworks${buildQueryString(params)}`, signal);
 }
 
-export function getArtwork(id: string): Promise<Artwork> {
-  return httpClient.get<Artwork>(`/artworks/${id}`);
-}
-
 export function createArtwork(payload: CreateArtworkPayload): Promise<Artwork> {
   return httpClient.post<Artwork>('/artworks', payload);
 }

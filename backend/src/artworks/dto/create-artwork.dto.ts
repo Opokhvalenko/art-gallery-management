@@ -23,14 +23,18 @@ function trimString({ value }: { value: unknown }): unknown {
 }
 
 export class CreateArtworkDto {
-  @ApiProperty({ maxLength: ARTWORK_TITLE_MAX_LENGTH, example: 'Sunset Over the Ocean' })
+  @ApiProperty({
+    minLength: 1,
+    maxLength: ARTWORK_TITLE_MAX_LENGTH,
+    example: 'Sunset Over the Ocean',
+  })
   @Transform(trimString)
   @IsString()
   @IsNotEmpty()
   @MaxLength(ARTWORK_TITLE_MAX_LENGTH)
   title!: string;
 
-  @ApiProperty({ maxLength: ARTWORK_ARTIST_MAX_LENGTH, example: 'Claude Monet' })
+  @ApiProperty({ minLength: 1, maxLength: ARTWORK_ARTIST_MAX_LENGTH, example: 'Claude Monet' })
   @Transform(trimString)
   @IsString()
   @IsNotEmpty()
@@ -41,7 +45,13 @@ export class CreateArtworkDto {
   @IsIn(ARTWORK_TYPES)
   type!: ArtworkType;
 
-  @ApiProperty({ example: 4500, description: 'Must be greater than 0, at most 2 decimal places' })
+  @ApiProperty({
+    example: 4500,
+    minimum: 0,
+    exclusiveMinimum: true,
+    multipleOf: 0.01,
+    description: 'Must be greater than 0, at most 2 decimal places',
+  })
   @IsNumber(
     { maxDecimalPlaces: PRICE_MAX_DECIMAL_PLACES },
     { message: `price must be a number with at most ${PRICE_MAX_DECIMAL_PLACES} decimal places` },

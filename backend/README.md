@@ -39,7 +39,7 @@ Swagger UI (interactive API docs): `http://localhost:3000/api/docs`
 
 ## API
 
-Full contract with examples: `requests.http` (open with the VS Code REST Client extension, or any HTTP-file-compatible tool) and Swagger UI at `/api/docs`.
+Full contract with examples: `requests.http` (open with the VS Code REST Client extension, or any HTTP-file-compatible tool) and Swagger UI at `/api/docs` (raw OpenAPI JSON: `/api/docs-json`). Error responses (400/404) are documented with the shared `ErrorResponseDto` schema and examples — see `common/dto/error-response.dto.ts`.
 
 | Method | Path | |
 |---|---|---|
@@ -66,7 +66,7 @@ Codes: `VALIDATION_ERROR` (400) · `NOT_FOUND` (404) · `INTERNAL_ERROR` (500, l
 
 ## Tests
 
-- **30 e2e tests** (`test/artworks.e2e-spec.ts`) — the API contract above, run against an isolated `test.db` (never touches the committed `dev.db`). The test app is built with the same `configureApp()` as `main.ts` (validation, error filter, helmet, CORS), so tests exercise the production pipeline.
+- **32 e2e tests** (`test/artworks.e2e-spec.ts`) — the API contract above (plus checks that the OpenAPI document references the error schema for every 400/404), run against an isolated `test.db` (never touches the committed `dev.db`). The test app is built with the same `configureApp()` as `main.ts` (validation, error filter, helmet, CORS), so tests exercise the production pipeline.
 - **9 unit tests** (`src/artworks/artworks.service.spec.ts`) — the Decimal→number mapping, Prisma `P2025` → 404 mapping (update/delete run as a single query, no separate existence check), and the Unicode-aware artist filter, with a mocked Prisma client.
 
 ## What I'd add next

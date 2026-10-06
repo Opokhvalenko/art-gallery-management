@@ -3,7 +3,7 @@ import { Test, type TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { SEED_ARTWORKS } from '../prisma/seed-data';
 import { AppModule } from '../src/app.module';
-import { configureApp } from '../src/app.setup';
+import { configureApp, createSwaggerDocument } from '../src/app.setup';
 import { PrismaService } from '../src/common/prisma/prisma.service';
 
 // DATABASE_URL/FRONTEND_URL are set in test/setup-e2e.ts (runs before this
@@ -279,6 +279,34 @@ describe('Artworks (e2e)', () => {
 
     it('returns 404 for a missing id', async () => {
       await request(app.getHttpServer()).delete('/artworks/does-not-exist').expect(404);
+    });
+  });
+
+  describe('OpenAPI document', () => {
+    const errorRef = '#/components/schemas/ErrorResponseDto';
+
+    function responseSchemaRef(
+      path: string,
+      method: 'get' | 'post' | 'put' | 'delete',
+      status: string,
+    ): unknown {
+      const doc = createSwaggerDocument(app);
+      const response = doc.paths[path]?.[method]?.responses?.[status] as
+        | { content?: Record<string, { schema?: { $ref?: string } }> }
+        | undefined;
+      return response?.content?.['application/json']?.schema?.$ref;
+    }
+
+    it('documents 400 responses with the unified error schema', () => {
+      expect(responseSchemaRef('/artworks', 'get', '400')).toBe(errorRef);
+      expect(responseSchemaRef('/artworks', 'post', '400')).toBe(errorRef);
+      expect(responseSchemaRef('/artworks/{id}', 'put', '400')).toBe(errorRef);
+    });
+
+    it('documents 404 responses with the unified error schema', () => {
+      expect(responseSchemaRef('/artworks/{id}', 'get', '404')).toBe(errorRef);
+      expect(responseSchemaRef('/artworks/{id}', 'put', '404')).toBe(errorRef);
+      expect(responseSchemaRef('/artworks/{id}', 'delete', '404')).toBe(errorRef);
     });
   });
 });
