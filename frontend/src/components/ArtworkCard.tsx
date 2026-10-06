@@ -32,7 +32,7 @@ export function ArtworkCard({ artwork, onEdit }: ArtworkCardProps) {
           />
         ) : (
           <div
-            className={`flex h-full items-center justify-center bg-gradient-to-br text-3xl font-bold text-white ${getArtworkGradient(artwork.type)}`}
+            className={`flex h-full items-center justify-center bg-linear-to-br text-3xl font-bold text-white ${getArtworkGradient(artwork.type)}`}
           >
             {getArtworkInitials(artwork.title)}
           </div>
